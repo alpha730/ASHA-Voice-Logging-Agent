@@ -103,8 +103,3 @@ having their own question sets.
   ANC schedule is usable from the first visit. An exact date always wins over the estimate.
 - LLM calls retry on rate limits and server errors, honouring the provider's stated wait. Free tiers
   throttle hard, and a live demo should not die on a 429.
-
-## Not built
-
-Government health-system integration, offline queueing, authentication, and production data-privacy
-controls. All are future work, not blockers for the demo.
