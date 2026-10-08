@@ -1,0 +1,17 @@
+# Sarvam STT relay (scripts/stt-relay.ts). The Next app stays on Vercel, which cannot hold WebSockets open.
+services:
+  - type: web
+    name: asha-stt-relay
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm run relay
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: SARVAM_MODEL
+        value: saaras:v3-realtime
+      - key: SARVAM_LANGUAGE_CODE
+        value: hi-IN
