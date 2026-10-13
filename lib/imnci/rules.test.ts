@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { evaluate, fastBreathingThreshold, holds, validateProtocol, type Condition, type ImnciProtocol, type Signs } from "./rules.ts";
-import { buildSteps, nextStep, parseAgeMonths, parseStepAnswer, triageEntry } from "./flow.ts";
+import { AGE_CORRECTION_RE, ageFromText, buildSteps, nextStep, outOfRangeMessage, parseAgeMonths, parseStepAnswer, triageEntry } from "./flow.ts";
 
 const load = () => JSON.parse(readFileSync(new URL("../../imnci-sick-child-2m-5y.json", import.meta.url), "utf8")) as ImnciProtocol;
 const protocol = load();
@@ -389,17 +389,83 @@ test("every question has Hindi text, in Devanagari", () => {
   }
 });
 
-test("spoken ages are read with their own unit", () => {
-  assert.equal(parseAgeMonths("dedh saal, 18 mahine"), 18);
-  assert.equal(parseAgeMonths("dedh saal"), 18);
-  assert.equal(parseAgeMonths("2 saal"), 24);
-  assert.equal(parseAgeMonths("8 mahine ka hai"), 8);
+// ---------------------------------------------------------------------------
+// The child's age, read from what the worker said
+// ---------------------------------------------------------------------------
+
+const months = (text: string) => {
+  const r = ageFromText(text);
+  return r.kind === "age" ? r.months : r.kind;
+};
+
+test("the brief's sentence gives 36 months, so the age is not asked", () => {
+  const text = "Main Sunita, household 52602, Raju teen saal ka hai, khansi hai, saans tez le raha hai, doodh nahi pee raha, follow-up parson.";
+  assert.deepEqual(ageFromText(text), { kind: "age", months: 36, phrase: "teen saal" });
+  assert.equal(triageEntry({ transcript: text, symptoms: ["cough"], tempC: null, ageMonths: 36 }), "enter");
+});
+
+test("ages in Hindi and English words, digits and Devanagari are read in months", () => {
+  assert.equal(months("Raju teen saal ka hai"), 36);
+  assert.equal(months("Raju 3 saal ka hai"), 36);
+  assert.equal(months("he is 3 years old"), 36);
+  assert.equal(months("baccha 18 mahine ka hai"), 18);
+  assert.equal(months("18 months old"), 18);
+  assert.equal(months("बच्चा डेढ़ साल का है"), 18);
+  assert.equal(months("बच्चा ३ साल का है"), 36);
+  assert.equal(months("बच्चा अठारह महीने का है"), 18);
+  assert.equal(months("two years old"), 24);
+  assert.equal(months("dhai saal ka"), 30);
+  assert.equal(months("2 saal 3 mahine ka hai"), 27, "years and months together are one age");
+  assert.equal(months("dedh saal, 18 mahine"), 18, "the same age said twice is not a conflict");
+});
+
+test("unclear ages are never guessed: a range, two different ages, an approximation, or no unit", () => {
+  assert.deepEqual(ageFromText("Raju 2 saal ka hai, nahi 3 saal"), { kind: "unclear", reason: "two different ages", phrase: "2 saal / 3 saal" });
+  assert.equal((ageFromText("2-3 saal ka hai") as { reason: string }).reason, "a range of ages");
+  assert.equal((ageFromText("do ya teen saal ka hai") as { reason: string }).reason, "a range of ages");
+  assert.equal((ageFromText("do teen saal ka hai") as { reason: string }).reason, "a range of ages");
+  assert.equal((ageFromText("lagbhag 2 saal ka hai") as { reason: string }).reason, "an approximate age");
+  assert.equal((ageFromText("Raju teen ka hai") as { reason: string }).reason, "an age without a unit");
+});
+
+test("a duration is not an age", () => {
+  assert.equal(months("do saal se khansi hai"), "none");
+  assert.equal(months("teen mahine ki khansi hai"), "none");
+  assert.equal(months("do din se khansi"), "none");
+  assert.equal(months("teen din ka bukhar hai"), "none");
+  assert.equal(months("2 se 3 din se dast"), "none");
+  assert.equal(months("Raju teen saal ka hai, do din se khansi hai"), 36);
+});
+
+test("an answer to 'how old?' may be a bare number of months", () => {
+  assert.equal(parseAgeMonths("18"), 18);
+  assert.equal(parseAgeMonths("teen saal"), 36);
   assert.equal(parseAgeMonths("pata nahi"), null);
+  assert.equal(parseAgeMonths("2 ya 3 saal"), null);
+});
+
+test("a child outside 2 months to under 5 years does not enter, and is told why", () => {
+  const sick = { symptoms: ["fever"], tempC: null };
+  assert.equal(months("Raju 6 saal ka hai"), 72);
+  assert.equal(triageEntry({ transcript: "Raju 6 saal ka hai, bukhar hai", ...sick, ageMonths: 72 }), "out_of_range");
+  assert.equal(triageEntry({ transcript: "baccha 3 hafte ka hai, bukhar hai", ...sick, ageMonths: 0 }), "out_of_range");
+  assert.equal(triageEntry({ transcript: "baccha 5 saal ka hai", ...sick, ageMonths: 60 }), "out_of_range");
+  assert.equal(triageEntry({ transcript: "baccha 59 mahine ka hai", ...sick, ageMonths: 59 }), "enter");
+  assert.match(outOfRangeMessage(72, "en"), /72 months.*only for children from 2 months up to 5 years, so it was not started/);
+  assert.match(outOfRangeMessage(0, "hi"), /शुरू नहीं की गई.*young infant/);
+  assert.equal(triageEntry({ transcript: "Ramesh ko bukhar hai", ...sick, ageMonths: 40 * 12 }), "skip", "an adult is skipped silently");
+});
+
+test("'umar galat hai' and 'age is wrong' are age corrections; an ordinary answer is not", () => {
+  assert.ok(AGE_CORRECTION_RE.test("umar galat hai"));
+  assert.ok(AGE_CORRECTION_RE.test("उम्र गलत है"));
+  assert.ok(AGE_CORRECTION_RE.test("the age is wrong"));
+  assert.ok(!AGE_CORRECTION_RE.test("nahi, galat hai"));
+  assert.ok(!AGE_CORRECTION_RE.test("haan"));
 });
 
 test("only a sick child in the age band enters the pathway", () => {
   assert.equal(triageEntry({ transcript: "bacche ko bukhar hai", symptoms: ["fever"], tempC: null, ageMonths: 14 }), "enter");
   assert.equal(triageEntry({ transcript: "bacche ko bukhar hai", symptoms: ["fever"], tempC: null, ageMonths: null }), "ask_age");
   assert.equal(triageEntry({ transcript: "routine visit", symptoms: [], tempC: null, ageMonths: 14 }), "skip");
-  assert.equal(triageEntry({ transcript: "bukhar", symptoms: ["fever"], tempC: null, ageMonths: 72 }), "skip");
 });

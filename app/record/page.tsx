@@ -76,7 +76,8 @@ export default function RecordPage() {
     protocolData: {} as Record<string, unknown>,
     protocolExpecting: null as string | null,
     patientId: null as string | null,
-    childDob: null as string | null,
+    childDob: null as string | null, // only from a patient record that existed before this visit
+    startedAt: null as string | null, // when this visit began, to tell an old record from one just created
     triage: null as TriageState | null,
     triageStarted: false,
   });
@@ -147,7 +148,10 @@ export default function RecordPage() {
     setSavedId(data.visit.id);
     if (data.patient) {
       s.current.patientId = data.patient.id;
-      s.current.childDob ??= data.patient.date_of_birth ?? null;
+      // A patient registered by this very visit got their date of birth from a model reading of her
+      // words; the triage reads the age from those words itself, so only an older record counts.
+      const existedBefore = s.current.startedAt != null && data.patient.created_at < s.current.startedAt;
+      if (existedBefore) s.current.childDob ??= data.patient.date_of_birth ?? null;
       setPatient(data.patient);
       setPatientKnown(true);
     }
@@ -158,6 +162,8 @@ export default function RecordPage() {
     async (data: TriageResponse) => {
       s.current.triage = data.active ? data.state : null;
       setTriage(data.active ? data : null);
+      // Not started (for example a child outside 2 months to 5 years): say why, on screen and aloud.
+      if (!data.active && data.say) setAgent((a) => [...a, { text: data.say!, kind: "warn" }]);
       setPhase(ws.current ? "listening" : "idle");
       if (data.question) await speak(data.question);
       else if (data.say) await speak(data.say);
@@ -213,6 +219,7 @@ export default function RecordPage() {
       if (!turn) return;
       // While the IMNCI assessment is running, answers go to it and stay out of the visit transcript.
       if (s.current.triage && s.current.triage.stage !== "done") return triageTurn(turn);
+      s.current.startedAt ??= new Date().toISOString();
       s.current.turns = [...s.current.turns, turn];
       setTurns(s.current.turns);
       const lang = detectLanguage(s.current.turns.join(" "), sttLanguage);
@@ -251,7 +258,6 @@ export default function RecordPage() {
         setReopened(data.reopened);
         setProtocolData(data.protocolData);
         if (data.protocol && data.protocolLabel) setProtocol({ id: data.protocol, label: data.protocolLabel });
-        if (typeof data.protocolData.date_of_birth === "string") s.current.childDob ??= data.protocolData.date_of_birth;
 
         if (data.complete && data.summary) {
           await save(data.visit);
@@ -368,6 +374,7 @@ export default function RecordPage() {
       protocolExpecting: null,
       patientId: null,
       childDob: null,
+      startedAt: null,
       triage: null,
       triageStarted: false,
     };
@@ -403,7 +410,8 @@ export default function RecordPage() {
       setPatientKnown(data.known);
       setDue(data.due);
       s.current.patientId = data.patient?.id ?? null;
-      s.current.childDob = data.patient?.date_of_birth ?? null;
+      s.current.childDob = data.patient?.date_of_birth ?? null; // found on the register: a real record
+      s.current.startedAt ??= new Date().toISOString();
       if (data.say) {
         setAgent((a) => [...a, { text: data.say!, kind: "info" }]);
         await speak(data.say);

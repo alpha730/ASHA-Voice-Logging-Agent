@@ -33,11 +33,18 @@ export function TriageCard({ triage, onEnd }: { triage: TriageResponse; onEnd: (
     <section className="card triage">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h2 style={{ margin: 0 }}>Sick child assessment (IMNCI, 2 months to 5 years)</h2>
-        <span className="small muted">
-          Protocol v{triage.protocol.version}
-          {state?.ageMonths != null && ` · child ${state.ageMonths} months`}
-        </span>
+        <span className="small muted">Protocol v{triage.protocol.version}</span>
       </div>
+
+      {state?.ageMonths != null && (
+        <div className="small">
+          Child <strong>{state.ageMonths} months</strong>
+          {state.ageSource === "speech" && <>, from what you said (“{state.agePhrase}”)</>}
+          {state.ageSource === "record" && <>, from the patient record</>}
+          {state.ageSource === "answer" && <>, as you answered</>}
+          {!done && <span className="muted"> · Wrong age? Say “उम्र गलत है” / “age is wrong”.</span>}
+        </div>
+      )}
 
       {note && <div className="agent-msg warn small">{note}</div>}
 

@@ -13,6 +13,8 @@ export interface ImnciTriageRecord {
   verification: TriageResult["verification"]; // how far the rules behind this result were checked
   evaluated_at: string;
   age_months: number | null;
+  age_source: string | null; // "record", "speech" (read from her visit sentence) or "answer"
+  age_phrase: string | null; // the words the age was read from
   signs: Signs; // inputs exactly as captured
   skipped: string[]; // steps the worker could not answer
   derived: TriageResult["derived"];
@@ -32,6 +34,8 @@ export function evaluateTriage(signs: Signs, ageMonths: number | null): TriageRe
 export function buildRecord(opts: {
   signs: Signs;
   ageMonths: number | null;
+  ageSource: string | null;
+  agePhrase: string | null;
   skipped: string[];
   stoppedEarly: boolean;
   log: { q: string; a: string }[];
@@ -45,6 +49,8 @@ export function buildRecord(opts: {
     verification: result.verification,
     evaluated_at: new Date().toISOString(),
     age_months: opts.ageMonths,
+    age_source: opts.ageSource,
+    age_phrase: opts.agePhrase,
     signs: opts.signs,
     skipped: opts.skipped,
     derived: result.derived,

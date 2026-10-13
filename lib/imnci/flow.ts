@@ -298,30 +298,134 @@ const CHILD_RE = /(baccha|bachcha|bacche|bachche|bacchi|bachchi|beta\b|beti\b|ch
 export const STOP_RE = /^\s*(stop|end assessment|bas karo|band karo|khatam karo|बस करो|खत्म करो)\s*[.!।]?\s*$/i;
 export const SKIP_RE = /(pata nahi|nahi pata|don'?t know|not sure|skip|chhodo|maloom nahi)|पता नहीं/i;
 
-const AGE_WORDS: Record<string, number> = { ...NUMBER_WORDS, dedh: 1.5, dhai: 2.5, "डेढ़": 1.5, "ढाई": 2.5 };
-const MONTHS_RE = /(\d+(?:\.\d+)?|[a-zऀ-ॿ]+)\s*(?:months?|mahine|mahina|महीने|महीना)/i;
-const YEARS_RE = /(\d+(?:\.\d+)?|[a-zऀ-ॿ]+)\s*(?:years?|saal|varsh|साल|वर्ष)/i;
+// ---------------------------------------------------------------------------
+// The child's age, read from what the worker said
+// ---------------------------------------------------------------------------
 
-/** "8 mahine", "2 saal", "dedh saal" -> months. A stated month count wins over years. A bare number is months. */
-export function parseAgeMonths(text: string): number | null {
-  const value = (m: RegExpMatchArray | null) => (m ? (/^\d/.test(m[1]) ? Number(m[1]) : AGE_WORDS[m[1].toLowerCase()]) : undefined);
-  const months = value(text.match(MONTHS_RE));
-  if (months != null) return Math.round(months);
-  const years = value(text.match(YEARS_RE));
-  if (years != null) return Math.round(years * 12);
-  const n = parseNumber(text);
-  return n == null ? null : Math.round(n);
+const AGE_WORDS: Record<string, number> = {
+  ...NUMBER_WORDS,
+  dedh: 1.5, dhai: 2.5, "डेढ़": 1.5, "ढाई": 2.5,
+  gyarah: 11, barah: 12, baarah: 12, terah: 13, chaudah: 14, pandrah: 15, solah: 16, satrah: 17,
+  atharah: 18, athara: 18, athaarah: 18, unnees: 19, ikkees: 21, bais: 22, teis: 23, chaubees: 24,
+  eleven: 11, twelve: 12, eighteen: 18, twenty: 20, "twenty-four": 24,
+  "छह": 6, "छः": 6, "आठ": 8, "नौ": 9, "ग्यारह": 11, "बारह": 12, "पंद्रह": 15, "अठारह": 18, "बीस": 20, "चौबीस": 24,
+};
+// A number at a word boundary: digits, or a number word ("teen", "डेढ़").
+const NUM = String.raw`(?<![a-zऀ-ॿ\d.])(\d+(?:\.\d+)?|[a-zऀ-ॿ][a-zऀ-ॿ-]*)`;
+const UNITS: { re: string; months: number; needsAgeMarker: boolean }[] = [
+  { re: "years?|yrs?|saal|sal|varsh|baras|साल|वर्ष|बरस", months: 12, needsAgeMarker: false },
+  { re: "months?|mahine|mahina|maheene|महीने|महीना|माह", months: 1, needsAgeMarker: false },
+  // "3 hafte ka hai" is an age, "3 din ka bukhar" is not: weeks and days count only as "... ka hai" / "old".
+  { re: "weeks?|hafte|hafta|हफ्ते|हफ़्ते|सप्ताह", months: 7 / 30.44, needsAgeMarker: true },
+  { re: "days?|din|दिन", months: 1 / 30.44, needsAgeMarker: true },
+];
+const AGE_MARKER_AFTER = /^\s*(ka|ki|ke|का|की|के)\s*(hai|he|है)|^\s*old/i;
+// "do saal se khansi", "3 mahine pehle", "teen mahine ki khansi": a duration, not the child's age.
+const DURATION_AFTER = /^\s*(se|से|from|since|pehle|पहले|ago|baad|बाद|later|tak|तक)\b|^\s*(ka|ki|ke|का|की|के)?\s*(khansi|khaansi|bukhar|bukhaar|dast|fever|cough|diarrh|loose|खाँसी|खांसी|बुखार|दस्त)/i;
+const DURATION_BEFORE = /(for|pichhle|pichle|last|पिछले)\s*$/i;
+const APPROX_BEFORE = /(lagbhag|takreeban|karib|kareeb|about|around|approx\w*|nearly|roughly|लगभग|करीब|क़रीब|तकरीबन)\s*$/i;
+
+export type AgeReading =
+  | { kind: "age"; months: number; phrase: string }
+  | { kind: "unclear"; reason: string; phrase: string }
+  | { kind: "none" };
+
+/**
+ * The child's age in completed months, read without a model. Never guesses: a range, an
+ * approximate age, a number without a readable unit, or two different ages give "unclear",
+ * and the worker is asked. In an answer to "how old?", a bare number is taken as months.
+ */
+export function ageFromText(text: string, opts: { answer?: boolean } = {}): AgeReading {
+  const t = text.replace(/[०-९]/g, (d) => String("०१२३४५६७८९".indexOf(d))).toLowerCase();
+  const num = (s: string) => (/^\d/.test(s) ? Number(s) : AGE_WORDS[s]);
+  const unitAlt = UNITS.map((u) => u.re).join("|");
+
+  // "2-3 saal", "2 se 3 saal", "do ya teen saal", "do teen saal". Years and months only, and not a duration.
+  const ageUnits = UNITS.filter((u) => !u.needsAgeMarker).map((u) => u.re).join("|");
+  const rangeRe = new RegExp(`${NUM}\\s*(?:-|–|/|\\bto\\b|\\bse\\b|\\bya\\b|\\bor\\b|से|या|\\s)\\s*${NUM}\\s*(?:${ageUnits})(?![a-zऀ-ॿ])`, "gi");
+  for (const r of t.matchAll(rangeRe)) {
+    const after = t.slice(r.index! + r[0].length, r.index! + r[0].length + 25);
+    if (num(r[1]) != null && num(r[2]) != null && !DURATION_AFTER.test(after)) {
+      return { kind: "unclear", reason: "a range of ages", phrase: text.slice(r.index!, r.index! + r[0].length) };
+    }
+  }
+
+  const found: { months: number; start: number; end: number; phrase: string }[] = [];
+  for (const m of t.matchAll(new RegExp(`${NUM}\\s*(${unitAlt})(?![a-zऀ-ॿ])`, "gi"))) {
+    const n = num(m[1]);
+    if (n == null || !Number.isFinite(n)) continue;
+    const start = m.index!;
+    const end = start + m[0].length;
+    const before = t.slice(Math.max(0, start - 20), start);
+    const after = t.slice(end, end + 25);
+    const unit = UNITS.find((u) => new RegExp(`^(?:${u.re})$`, "i").test(m[2]))!;
+    if (DURATION_AFTER.test(after) || DURATION_BEFORE.test(before)) continue;
+    if (unit.needsAgeMarker && !AGE_MARKER_AFTER.test(after)) continue;
+    if (APPROX_BEFORE.test(before)) return { kind: "unclear", reason: "an approximate age", phrase: text.slice(start, end) };
+    found.push({ months: n * unit.months, start, end, phrase: text.slice(start, end) });
+  }
+
+  // "2 saal 3 mahine" is one age, not two.
+  const ages: { months: number; phrase: string }[] = [];
+  for (let i = 0; i < found.length; i++) {
+    const a = found[i];
+    const b = found[i + 1];
+    if (b && a.months >= 12 && b.months < 12 && /^\s*(aur|and|,|और)?\s*$/i.test(t.slice(a.end, b.start))) {
+      ages.push({ months: a.months + b.months, phrase: text.slice(a.start, b.end) });
+      i++;
+    } else ages.push(a);
+  }
+
+  if (!ages.length) {
+    // "teen ka hai": an age with no unit we can read.
+    const bare = t.match(new RegExp(`${NUM}\\s+(?:ka|ki|ke|का|की|के)\\s+(?:hai|है)`, "i"));
+    if (bare && num(bare[1]) != null && !opts.answer) return { kind: "unclear", reason: "an age without a unit", phrase: bare[0] };
+    if (opts.answer) {
+      const n = parseNumber(t);
+      if (n != null) return { kind: "age", months: Math.floor(n), phrase: text.trim() };
+    }
+    return { kind: "none" };
+  }
+  const distinct = [...new Set(ages.map((a) => Math.floor(a.months)))];
+  if (distinct.length > 1) return { kind: "unclear", reason: "two different ages", phrase: ages.map((a) => a.phrase).join(" / ") };
+  return { kind: "age", months: distinct[0], phrase: ages[0].phrase };
 }
 
-export type Entry = "enter" | "ask_age" | "skip";
+/** Months from an answer to "how old is the child?", or null when it has to be asked again. */
+export function parseAgeMonths(text: string): number | null {
+  const r = ageFromText(text, { answer: true });
+  return r.kind === "age" ? r.months : null;
+}
+
+/** "Umar galat hai" / "age is wrong": the worker is correcting the age the app took. */
+export const AGE_CORRECTION_RE = /(umar|umr|age|उम्र|उमर).{0,20}(galat|wrong|गलत)|(galat|wrong|गलत).{0,20}(umar|umr|age|उम्र|उमर)/i;
+
+export const inAgeBand = (months: number) => months >= AGE_MIN_MONTHS && months < AGE_MAX_MONTHS;
+
+export type Entry = "enter" | "ask_age" | "out_of_range" | "skip";
 
 /**
  * After the visit is logged: enter the pathway for a sick child aged 2 months to 5 years.
  * "Sick" means a symptom or a fever was recorded. A child with an unknown age is asked once.
+ * A child outside the age band does not enter, and the worker is told why ("out_of_range").
+ * An adult with no child mentioned is skipped silently.
  */
 export function triageEntry(opts: { transcript: string; symptoms: string[]; tempC: number | null; ageMonths: number | null }): Entry {
   const sick = opts.symptoms.length > 0 || (opts.tempC != null && opts.tempC >= 37.5);
   if (!sick) return "skip";
-  if (opts.ageMonths != null) return opts.ageMonths >= AGE_MIN_MONTHS && opts.ageMonths < AGE_MAX_MONTHS ? "enter" : "skip";
-  return CHILD_RE.test(opts.transcript) ? "ask_age" : "skip";
+  const child = CHILD_RE.test(opts.transcript);
+  if (opts.ageMonths != null) {
+    if (inAgeBand(opts.ageMonths)) return "enter";
+    return child || opts.ageMonths < 18 * 12 ? "out_of_range" : "skip";
+  }
+  return child ? "ask_age" : "skip";
+}
+
+export function outOfRangeMessage(months: number, lang: Lang): string {
+  if (lang === "hi") {
+    const young = months < AGE_MIN_MONTHS ? " 2 महीने से छोटे शिशु के लिए young infant chart देखिए, यह app उसे नहीं करता।" : "";
+    return `बच्चा ${months} महीने का है। यह IMNCI जाँच सिर्फ़ 2 महीने से 5 साल तक के बच्चों के लिए है, इसलिए शुरू नहीं की गई।${young}`;
+  }
+  const young = months < AGE_MIN_MONTHS ? " For a young infant under 2 months, use the young infant chart; this app does not cover it." : "";
+  return `The child is ${months} months old. This IMNCI assessment is only for children from 2 months up to 5 years, so it was not started.${young}`;
 }
