@@ -271,8 +271,42 @@ export function parseChoice(step: Step, text: string): Record<string, SignValue>
   return hits.length === 1 ? step.choices![hits[0]] : null;
 }
 
-/** Parse the answer to one step. Returns the sign values, or null if the answer did not settle the step. */
+// "I don't know" and "skip", as whole phrases. Checked before any yes/no, number or choice parsing,
+// so "pata nahi" is never read as "no" (it contains "nahi") or as "no pallor". Ordinary negations
+// ("nahi", "nahi hai", "doodh nahi pee raha") are not matched.
+const UNKNOWN_LATIN = [
+  "pata nahi[n]?",
+  "nahi[n]? pata",
+  "maa?l(?:oo|u)m nahi[n]?",
+  "dekha nahi[n]?",
+  "check nahi[n]? kiya",
+  "(?:i )?(?:don'?t|do not) know",
+  "not sure",
+  "can'?t tell",
+  "cannot tell",
+  "skip",
+  "chhodo",
+];
+const UNKNOWN_HINDI = ["पता नहीं", "पता नही", "नहीं पता", "मालूम नहीं", "देखा नहीं", "चेक नहीं किया"];
+// Devanagari letters and vowel signs, but not the danda, so "पता नहीं।" still matches.
+const DEV_LETTER = "\u0900-\u0963\u0971-\u097F";
+const UNKNOWN_RE = new RegExp(
+  String.raw`\b(?:${UNKNOWN_LATIN.join("|")})\b|(?<![${DEV_LETTER}])(?:${UNKNOWN_HINDI.join("|")})(?![${DEV_LETTER}])`,
+  "i",
+);
+
+/** True when she says she does not know, did not check, or wants to skip. The sign stays not assessed. */
+export function isUnknownAnswer(text: string): boolean {
+  return UNKNOWN_RE.test(text.replace(/[‘’`]/g, "'"));
+}
+
+/**
+ * Parse the answer to one step. Returns the sign values, or null if the answer did not settle the
+ * step. An "I don't know" answer is never a value: it returns null here, and the route marks the step
+ * not assessed (see isUnknownAnswer).
+ */
 export function parseStepAnswer(step: Step, text: string): Signs | null {
+  if (isUnknownAnswer(text)) return null;
   if (step.kind === "count") {
     const n = parseNumber(text);
     const [min, max] = step.range ?? [1, 150];
@@ -296,7 +330,6 @@ const CHILD_RE = /(baccha|bachcha|bacche|bachche|bacchi|bachchi|beta\b|beti\b|ch
 
 // Whole-utterance only: "bas do din se" is an answer, not a request to stop.
 export const STOP_RE = /^\s*(stop|end assessment|bas karo|band karo|khatam karo|बस करो|खत्म करो)\s*[.!।]?\s*$/i;
-export const SKIP_RE = /(pata nahi|nahi pata|don'?t know|not sure|skip|chhodo|maloom nahi)|पता नहीं/i;
 
 // ---------------------------------------------------------------------------
 // The child's age, read from what the worker said

@@ -84,7 +84,9 @@ Safety rules, each covered by tests:
 
 - Danger signs are asked first. Any general danger sign ends the questions and gives URGENT REFERRAL.
 - Any pink classification gives urgent referral.
-- A sign that was not assessed never produces a green result.
+- A sign that was not assessed never produces a green result. "Pata nahi", "did not check" or "skip"
+  marks the sign not assessed and moves on, and is never read as "no". A table that reads an
+  unassessed sign stays pending rather than ending on a green row.
 - The booklet's treatment column (`imnci_action`) is never shown. The app shows `asha_action` only.
 - Nothing from a model decides a classification. The model only maps her words to sign ids;
   measurements (breath count, SpO2, MUAC, skin pinch) are parsed from her answer, never from a model.

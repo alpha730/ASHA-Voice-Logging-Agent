@@ -169,9 +169,14 @@ export function entryVerification(e: CounsellingEntry): Verification {
 }
 
 /**
- * The text to read aloud: each title, then its source steps, in one language. Held steps and app
- * notes are not read: what the mother hears is source text only. App notes stay on the card.
+ * The text to read aloud: each title, its source steps, then its app notes, in one language. Held
+ * steps are never read. App notes are read as plain advice; the card labels them as app notes.
  */
 export function adviceSpeech(entries: CounsellingEntry[], lang: "en" | "hi"): string {
-  return entries.map((e) => `${lang === "hi" ? e.title_hi : e.title_en}: ${visibleSteps(e, lang).join(" ")}`).join(" ");
+  return entries
+    .map((e) => {
+      const notes = (e.app_notes ?? []).map((n) => (lang === "hi" ? n.hi : n.en));
+      return `${lang === "hi" ? e.title_hi : e.title_en}: ${[...visibleSteps(e, lang), ...notes].join(" ")}`;
+    })
+    .join(" ");
 }

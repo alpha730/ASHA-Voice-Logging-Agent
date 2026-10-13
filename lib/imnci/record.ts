@@ -1,4 +1,4 @@
-import { PROTOCOL } from "@/lib/imnci/protocol";
+import { PROTOCOL, signsOfSteps } from "@/lib/imnci/protocol";
 import { evaluate, type Signs, type TriageResult } from "@/lib/imnci/rules";
 
 /**
@@ -27,8 +27,9 @@ export interface ImnciTriageRecord {
   qa_log: { q: string; a: string }[]; // the triage conversation, question by question
 }
 
-export function evaluateTriage(signs: Signs, ageMonths: number | null): TriageResult {
-  return evaluate(PROTOCOL, { signs, ageMonths });
+/** `skipped` are the step keys she could not answer; their signs never let a table settle on green. */
+export function evaluateTriage(signs: Signs, ageMonths: number | null, skipped: string[] = []): TriageResult {
+  return evaluate(PROTOCOL, { signs, ageMonths, notAssessed: signsOfSteps(skipped) });
 }
 
 export function buildRecord(opts: {
@@ -40,7 +41,7 @@ export function buildRecord(opts: {
   stoppedEarly: boolean;
   log: { q: string; a: string }[];
 }): ImnciTriageRecord {
-  const result = evaluateTriage(opts.signs, opts.ageMonths);
+  const result = evaluateTriage(opts.signs, opts.ageMonths, opts.skipped);
   return {
     protocol: PROTOCOL.protocol,
     pathway: PROTOCOL.pathway,

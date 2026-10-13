@@ -11,6 +11,9 @@ if (undefinedSigns.length) throw new Error(`IMNCI protocol uses signs with no qu
 
 export const STEPS = buildSteps(PROTOCOL);
 
+/** The sign ids behind the steps the worker could not answer. */
+export const signsOfSteps = (keys: string[]): string[] => STEPS.filter((s) => keys.includes(s.key)).flatMap((s) => s.signs);
+
 /** Decides a step's ask_if condition for the next-question logic. */
 export const askIfChecker = (signs: Signs, ageMonths: number | null) => (cond: Condition) =>
   holds(PROTOCOL, { signs, ageMonths }, cond);

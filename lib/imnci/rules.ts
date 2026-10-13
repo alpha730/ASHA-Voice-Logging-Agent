@@ -111,6 +111,9 @@ export interface ImnciProtocol {
 export interface TriageInput {
   signs: Signs;
   ageMonths: number | null;
+  // Signs the worker could not assess ("pata nahi", skipped, or three unclear answers). A table that
+  // reads any of them never settles on a green row: it stays pending instead.
+  notAssessed?: string[];
 }
 
 /** What the worker is shown. Deliberately has no imnci_action: facility treatments are out of ASHA scope. */
@@ -310,6 +313,25 @@ function evalTable(ctx: Ctx, table: Table): TableOutcome {
 // Derived signs
 // ---------------------------------------------------------------------------
 
+/** The raw signs a table reads, with derived signs (fast breathing, dehydration) expanded to their inputs. */
+function tableInputs(protocol: ImnciProtocol, tables: Table[], table: Table, seen = new Set<string>()): Set<string> {
+  const refs = new Set<string>();
+  for (const cond of [table.gate, table.escalation, ...table.rows.flatMap((r) => [r.requires, r.escalate_if ?? null])]) {
+    if (cond) referencedSigns(cond, refs);
+  }
+  const out = new Set<string>();
+  seen.add(table.id);
+  for (const id of refs) {
+    if (id === "general_danger_sign") generalDangerSignIds(protocol).forEach((s) => out.add(s));
+    else if (id === "fast_breathing") out.add("respiratory_rate");
+    else if (id === "dehydration_present") {
+      const t = tables.find((x) => x.id.endsWith(".dehydration"));
+      if (t && !seen.has(t.id)) tableInputs(protocol, tables, t, seen).forEach((s) => out.add(s));
+    } else out.add(id);
+  }
+  return out;
+}
+
 export function generalDangerSignIds(protocol: ImnciProtocol): string[] {
   return [...protocol.general_danger_signs.ask, ...protocol.general_danger_signs.look].map((i) => i.id);
 }
@@ -395,6 +417,11 @@ function toMatched(row: ProtocolClassification, assessment: string, escalations:
 }
 
 /** Draft unless every rule behind every classification shown was compared to the booklet or reviewed. */
+/** The signs a result could not assess, as words, for the card's "Not assessed" line. */
+export function notAssessedLabels(pending: TriageResult["pending"]): string[] {
+  return [...new Set(pending.flatMap((p) => p.signs))].map((id) => id.replace(/^has_/, "").replace(/_/g, " "));
+}
+
 export function verificationOf(classifications: MatchedClassification[]): Verification {
   const checks = classifications.flatMap((c) => c.checks);
   if (!checks.length || checks.includes("not-confirmed")) return "draft";
@@ -475,6 +502,10 @@ export function evaluate(protocol: ImnciProtocol, input: TriageInput): TriageRes
             fired.push({ text: typeof esc.then === "string" ? esc.then : "refer", check });
           }
         }
+        // A green row is an all-clear. It is never given while a sign this table reads was not assessed,
+        // even when three-valued logic says that sign could not change the row. Pink and yellow rows stand.
+        const unchecked = r.row.band === "green" ? (input.notAssessed ?? []).filter((s) => tableInputs(protocol, tables, table).has(s)) : [];
+        if (unchecked.length) open.push(...unchecked);
         if (open.length) pending.push({ table: table.id, signs: [...new Set(open)] });
         else classifications.push(toMatched(r.row, a.id, fired));
       }

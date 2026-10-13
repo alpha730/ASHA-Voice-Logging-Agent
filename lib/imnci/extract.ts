@@ -1,5 +1,5 @@
 import { isLlmUnavailable, llmConfigured, llmJson } from "../llm.ts";
-import { parseStepAnswer, type Step } from "./flow.ts";
+import { isUnknownAnswer, parseStepAnswer, type Step } from "./flow.ts";
 import type { Signs } from "./rules.ts";
 
 /**
@@ -64,6 +64,8 @@ export async function extractSigns(
   steps: Step[],
   expecting: Step | null,
 ): Promise<{ signs: Signs; modelUnavailable: boolean }> {
+  // "I don't know" is never sent to the model, which might read "pata nahi" as "no".
+  if (expecting && isUnknownAnswer(text)) return { signs: {}, modelUnavailable: false };
   const direct = expecting ? parseStepAnswer(expecting, text) : null;
   if (expecting?.measurement) return { signs: direct ?? {}, modelUnavailable: false };
 

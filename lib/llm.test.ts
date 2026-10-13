@@ -182,3 +182,15 @@ test(
     assert.equal(calls.length, 0);
   }),
 );
+
+test(
+  "'pata nahi' is never sent to the model, even when it is up, and fills no sign",
+  withEnv(PRIMARY, async () => {
+    mockModel({}, '{"vomits_everything": false}'); // a model that would read it as "no"
+    for (const t of ["pata nahi", "पता नहीं", "not sure"]) {
+      const r = await extractSigns(t, steps, step("vomits_everything"));
+      assert.deepEqual(r.signs, {}, t);
+    }
+    assert.equal(calls.length, 0);
+  }),
+);

@@ -7,12 +7,12 @@ import {
   ageFromText,
   choiceLabels,
   inAgeBand,
+  isUnknownAnswer,
   MODEL_BUSY_START,
   modelBusyRepeat,
   nextStep,
   outOfRangeMessage,
   promptText,
-  SKIP_RE,
   STOP_RE,
   triageEntry,
   type Lang,
@@ -116,7 +116,7 @@ const askAge = (state: TriageState, question: string): TriageResponse => ({
 });
 
 async function advance(state: TriageState, lang: Lang, visitId: string | null): Promise<TriageResponse> {
-  const result = evaluateTriage(state.signs, state.ageMonths);
+  const result = evaluateTriage(state.signs, state.ageMonths, state.skipped);
   // A general danger sign means refer now: "Do not delay referral to finish other questions."
   const step = result.derived.general_danger_sign === true ? null : nextStep(STEPS, state.signs, state.skipped, askIfChecker(state.signs, state.ageMonths));
   if (step && !state.stoppedEarly) {
@@ -251,13 +251,15 @@ export async function POST(req: Request) {
           skipped: state.skipped.filter((k) => k !== last.key),
           attempts: 0,
         };
-        return NextResponse.json<TriageResponse>({ ...base, active: true, state: reopened, result: evaluateTriage(signs, state.ageMonths), question: again, say: null });
+        return NextResponse.json<TriageResponse>({ ...base, active: true, state: reopened, result: evaluateTriage(signs, state.ageMonths, reopened.skipped), question: again, say: null });
       }
     }
 
     log.push({ q: asked, a: turn });
-    if (step && SKIP_RE.test(turn)) {
-      return NextResponse.json(await advance({ ...state, log, skipped: [...state.skipped, step.key], lastAnswered: step.key }, lang, visitId));
+    // "Pata nahi", "did not check", "skip": the sign stays not assessed and the next question is asked.
+    // No retry and no model call; it counts the same as three unclear answers.
+    if (step && isUnknownAnswer(turn)) {
+      return NextResponse.json(await advance({ ...state, log, skipped: [...state.skipped, step.key], lastAnswered: step.key, attempts: 0 }, lang, visitId));
     }
 
     const { signs: found, modelUnavailable } = await extractSigns(turn, STEPS, step);
@@ -271,14 +273,14 @@ export async function POST(req: Request) {
       // The model was down and her answer needed it: ask again in a form read without a model.
       // An outage is not her unclear answer, so it does not count toward skipping the step.
       if (modelUnavailable) {
-        return NextResponse.json<TriageResponse>({ ...base, active: true, state: { ...state, signs, log }, result: evaluateTriage(signs, state.ageMonths), question: modelBusyRepeat(step, lang), say: null });
+        return NextResponse.json<TriageResponse>({ ...base, active: true, state: { ...state, signs, log }, result: evaluateTriage(signs, state.ageMonths, state.skipped), question: modelBusyRepeat(step, lang), say: null });
       }
       if (state.attempts + 1 >= MAX_ATTEMPTS) {
         return NextResponse.json(await advance({ ...state, signs, log, skipped: [...state.skipped, step.key], lastAnswered: step.key, attempts: 0 }, lang, visitId));
       }
       const options = step.choices ? ` (${choiceLabels(step, lang).join(" / ")})` : "";
       const again = lang === "hi" ? `समझ नहीं आया। ${asked}${options}` : `Sorry, I did not get that. ${asked}${options}`;
-      return NextResponse.json<TriageResponse>({ ...base, active: true, state: { ...state, signs, log, attempts: state.attempts + 1 }, result: evaluateTriage(signs, state.ageMonths), question: again, say: null });
+      return NextResponse.json<TriageResponse>({ ...base, active: true, state: { ...state, signs, log, attempts: state.attempts + 1 }, result: evaluateTriage(signs, state.ageMonths, state.skipped), question: again, say: null });
     }
     return NextResponse.json(await advance({ ...state, signs, log, lastAnswered: step?.key ?? state.lastAnswered }, lang, visitId));
   } catch (err) {

@@ -308,15 +308,23 @@ test("a held step needs hold: true and a reason", () => {
   assert.throws(() => validateCounselling(f, protocol), /hold_reason/);
 });
 
-test("the ORS packet note is an app note: labelled, not read aloud, never verified", () => {
+test("the ORS packet note is an app note: labelled on the card, read aloud, never verified", () => {
   const ors = file.entries.find((e) => e.id === "how_to_make_ors")!;
   assert.deepEqual(ors.app_notes!.map((n) => n.en), ["Use the amount of water printed on the ORS packet."]);
   // The quoted source steps are kept as they were.
   assert.ok(ors.steps_en.some((s) => s.includes("1 litre (1000 ml)")));
   const card = readFileSync(new URL("app/record/TriageCard.tsx", root), "utf8");
   assert.ok(card.includes("App note, not from the booklet"));
-  const speech = adviceSpeech([ors], "en") + adviceSpeech([ors], "hi");
-  for (const n of ors.app_notes!) assert.equal(speech.includes(n.en) || speech.includes(n.hi), false);
+  // Read aloud with the other advice, in the chosen language only, after the source steps.
+  const en = adviceSpeech([ors], "en");
+  const hi = adviceSpeech([ors], "hi");
+  for (const n of ors.app_notes!) {
+    assert.ok(en.includes(n.en) && hi.includes(n.hi));
+    assert.equal(en.includes(n.hi) || hi.includes(n.en), false);
+    assert.ok(en.indexOf(n.en) > en.indexOf(ors.steps_en.at(-1)!));
+  }
+  // The label is for the card, not for the mother's ears.
+  assert.equal(/app note/i.test(en), false);
   // Its presence does not change how the entry was checked, and quotesOf never includes it.
   assert.equal(entryVerification(ors), "ai-compared");
   assert.equal(quotesOf(ors).some((q) => q.quote.includes("printed on the ORS packet")), false);
@@ -369,4 +377,18 @@ test("the diarrhoea follow-up question (2 or 5 days) is recorded as an open ques
   assert.equal(/\d/.test(fu.steps_en.join(" ") + fu.steps_hi.join(" ")), false);
   const some = [...protocol.assessments.flatMap((a) => (a.classification_groups ?? []).flatMap((g) => g.classifications))].find((c) => c.id === "some_dehydration");
   assert.equal(some?.follow_up_days, 2, "the protocol keeps its value");
+});
+
+test("held_steps are never read aloud or shown, even when every entry is read at once", () => {
+  assert.ok(held.length > 0);
+  const everything = [
+    adviceSpeech(file.entries, "en"),
+    adviceSpeech(file.entries, "hi"),
+    ...file.entries.flatMap((e) => [...visibleSteps(e, "en"), ...visibleSteps(e, "hi")]),
+  ].join("\n");
+  for (const h of held) {
+    assert.equal(everything.includes(h.step_en), false, h.step_en);
+    assert.equal(everything.includes(h.step_hi), false, h.step_hi);
+  }
+  for (const word of ["honey", "tulsi", "ginger", "शहद", "तुलसी", "अदरक"]) assert.equal(everything.includes(word), false, word);
 });

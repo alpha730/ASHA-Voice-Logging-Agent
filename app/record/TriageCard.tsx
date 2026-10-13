@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { TriageResponse } from "@/app/api/triage/route";
 import { COUNSELLING } from "@/lib/imnci/advice";
 import { adviceFor, adviceSpeech, entryVerification, visibleSteps } from "@/lib/imnci/counselling";
-import type { Outcome, Verification } from "@/lib/imnci/rules";
+import { notAssessedLabels, type Outcome, type Verification } from "@/lib/imnci/rules";
 
 const OUTCOME: Record<Outcome, { label: string; band: string }> = {
   urgent_referral: { label: "URGENT REFERRAL", band: "pink" },
@@ -133,7 +133,7 @@ export function TriageCard({
           )}
           {result.pending.length > 0 && (
             <p className="small missing">
-              Not assessed: {result.pending.map((p) => p.signs.map(labelOf).join(", ")).join("; ")}
+              Not assessed: {notAssessedLabels(result.pending).join(", ")}
             </p>
           )}
           {result.unmatched.length > 0 && (
