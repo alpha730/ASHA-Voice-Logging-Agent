@@ -35,3 +35,6 @@ alter table visits add column if not exists patient_id uuid references patients 
 alter table visits add column if not exists protocol text;
 alter table visits add column if not exists protocol_data jsonb not null default '{}'::jsonb;
 create index if not exists visits_patient_idx on visits (patient_id, created_at desc);
+
+-- IMNCI sick child triage: the classification result, the signs that produced it, and the protocol version.
+alter table visits add column if not exists imnci_triage jsonb;

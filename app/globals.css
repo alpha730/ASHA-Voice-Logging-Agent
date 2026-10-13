@@ -98,3 +98,25 @@ textarea, input[type="text"] { font: inherit; width: 100%; padding: 8px; border:
 
 .due-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
 .due-list li { font-size: 0.92rem; }
+
+/* IMNCI triage bands. Pink, yellow and green follow the IMNCI chart convention. */
+:root { --pink: #c2185b; --pink-soft: #fde7f0; --yellow: #a16207; --yellow-soft: #fef6d8; --green: #15803d; --green-soft: #dcf5e3; }
+.triage { display: flex; flex-direction: column; gap: 12px; }
+.triage-question { border: 2px solid var(--brand); border-radius: 12px; padding: 14px; display: grid; gap: 8px; justify-items: start; }
+.triage-question .q { font-size: 1.25rem; font-weight: 600; }
+.outcome { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.02em; padding: 14px 16px; border-radius: 10px; color: #fff; }
+.outcome.band-pink { background: var(--pink); }
+.outcome.band-yellow { background: #eab308; color: #3b2a00; }
+.outcome.band-green { background: var(--green); }
+.outcome.band-grey { background: var(--muted); }
+.classification { border-left: 10px solid; border-radius: 10px; padding: 12px 14px; }
+.classification.band-pink { border-color: var(--pink); background: var(--pink-soft); }
+.classification.band-yellow { border-color: #eab308; background: var(--yellow-soft); }
+.classification.band-green { border-color: var(--green); background: var(--green-soft); }
+.classification .action { font-size: 1.05rem; margin: 6px 0; }
+.band-chip { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 2px 10px; border-radius: 999px; color: #fff; }
+.band-chip.band-pink { background: var(--pink); }
+.band-chip.band-yellow { background: #eab308; color: #3b2a00; }
+.band-chip.band-green { background: var(--green); }
+.disclaimer { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; color: var(--muted); }
+.signs { columns: 2; margin: 6px 0; padding-left: 18px; }

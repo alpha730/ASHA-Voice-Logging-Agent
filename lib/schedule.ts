@@ -164,8 +164,8 @@ export function dueSummary(name: string, items: DueItem[], lang: "hi" | "en"): s
   const more = actionable.length > 3 ? ` and ${actionable.length - 3} more` : "";
   if (lang === "hi") {
     return overdue.length
-      ? `${name} ke liye ${labels}${more} baaki hai, ${Math.abs(overdue[0].days)} din se pending.`
-      : `${name} ke liye aaj ${labels}${more} due hai.`;
+      ? `${name} के लिए ${labels}${more} बाकी है, ${Math.abs(overdue[0].days)} दिन से pending.`
+      : `${name} के लिए आज ${labels}${more} due है।`;
   }
   return overdue.length
     ? `${name} is overdue for ${labels}${more}, by ${Math.abs(overdue[0].days)} days.`

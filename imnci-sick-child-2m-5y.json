@@ -1,0 +1,1013 @@
+{
+  "protocol": "IMNCI",
+  "pathway": "sick_child_2m_5y",
+  "version": "0.2",
+  "source": {
+    "title": "IMNCI Chart Booklet for Health Workers",
+    "publisher": "Child Health Division, Ministry of Health & Family Welfare, Government of India",
+    "edition": "2023",
+    "pages": "Sick child 2 months up to 5 years: printed pages 09-11 (PDF pages 11-13)",
+    "official_listing": "https://nhm.gov.in/index4.php?lang=1&level=0&linkid=526&lid=830",
+    "retrieved_from": "https://nhmmizoram.org/upload/IMNCI%20Chart%20booklet%20Health%20Worker%202023.pdf",
+    "retrieved_note": "nhm.gov.in refused connections from the build machine (2026-10-13). This copy is hosted by NHM Mizoram (state National Health Mission). Cover reads 'Chart Booklet for Health Workers, Child Health Division, Ministry of Health & Family Welfare, Government of India, 2023'. Compare the SHA-256 with a copy downloaded from nhm.gov.in.",
+    "sha256": "97830b803b71a58d93b39f41994943bc5e222905bd8c00f943093228ea3c5d59",
+    "retrieved_on": "2026-10-13"
+  },
+  "IMPORTANT": {
+    "verification": "Each classification carries verified and source_check. verified:true only with a real printed page and an exact quote from the 2023 health-worker booklet. Quotes are whitespace-normalised.",
+    "source_check_methods": {
+      "ai-compared-to-booklet": "Compared to the booklet by software (Claude), with page and quote. Not reviewed by a clinician.",
+      "clinician-reviewed": "Reviewed against the printed booklet by a named clinician. Set by hand only, with reviewer and date.",
+      "not-confirmed": "Not found in, or not readable from, the booklet. Has a reason."
+    },
+    "check_scope": "A source_check covers the signs, thresholds, colour band and follow_up_days of a row. asha_action and refer are ASHA-scope filters and are NOT checked against this booklet: its treatment column is written for health workers (ANMs), not ASHAs. Confirm them against the NHM ASHA drug kit list.",
+    "scope": "imnci_action is the booklet's treatment column, much of which (injectables, gentamicin, antimalarials) is outside ASHA scope. The app shows asha_action only.",
+    "role": "This encodes a referral and triage protocol. It classifies and routes. It does not diagnose and must never be presented as diagnosis."
+  },
+  "colour_bands": {
+    "pink": "Urgent referral. Complete assessment, give any permitted pre-referral treatment, refer immediately.",
+    "yellow": "Treat with a specific medicine or advice and follow up on a stated day.",
+    "green": "Home care and counselling. Advise when to return immediately."
+  },
+  "general_danger_signs": {
+    "source_page": "09",
+    "verified": true,
+    "source_check": {
+      "method": "ai-compared-to-booklet",
+      "date": "2026-10-13",
+      "quote": "A child with any general danger sign needs URGENT attention"
+    },
+    "ask": [
+      {
+        "id": "unable_to_drink",
+        "question_en": "Is the child able to drink or feed?",
+        "question_hi": "क्या बच्चा पी या खा पा रहा है?",
+        "positive_when": "no"
+      },
+      {
+        "id": "vomits_everything",
+        "question_en": "Does the child vomit everything?",
+        "question_hi": "क्या बच्चा जो भी खाता-पीता है, सब उल्टी कर देता है?",
+        "positive_when": "yes"
+      },
+      {
+        "id": "convulsions",
+        "question_en": "Has the child had convulsions?",
+        "question_hi": "क्या बच्चे को झटके या दौरे आए हैं?",
+        "positive_when": "yes"
+      }
+    ],
+    "look": [
+      {
+        "id": "lethargic_unconscious",
+        "observation_en": "See if the child is lethargic or unconscious",
+        "observation_hi": "क्या बच्चा सुस्त है या बेहोश है?"
+      },
+      {
+        "id": "convulsing_now",
+        "observation_en": "Is the child convulsing now?",
+        "observation_hi": "क्या बच्चे को अभी झटके आ रहे हैं?"
+      }
+    ],
+    "rule": "A child with any general danger sign needs URGENT attention; complete the assessment and any pre-referral treatment immediately so that referral is not delayed.",
+    "asha_action": "Refer urgently to the nearest facility. Keep the child warm. Continue breastfeeding if the child can drink. Do not delay referral to finish other questions."
+  },
+  "assessments": [
+    {
+      "id": "cough",
+      "title": "Cough or difficult breathing",
+      "source_page": "09",
+      "trigger": {
+        "question_en": "Does the child have cough or difficult breathing?",
+        "question_hi": "क्या बच्चे को खाँसी है या साँस लेने में तकलीफ़ है?"
+      },
+      "ask": [
+        {
+          "id": "cough_duration_days",
+          "question_en": "For how long?",
+          "question_hi": "खाँसी कितने दिनों से है?",
+          "type": "number_days"
+        }
+      ],
+      "look": [
+        {
+          "id": "respiratory_rate",
+          "observation_en": "Count the breaths in one minute",
+          "observation_hi": "एक मिनट तक बच्चे की साँसें गिनिए",
+          "type": "number",
+          "range": [
+            5,
+            150
+          ]
+        },
+        {
+          "id": "chest_indrawing",
+          "observation_en": "Look for chest indrawing",
+          "observation_hi": "साँस लेते समय क्या बच्चे की छाती नीचे की ओर धँसती है?"
+        },
+        {
+          "id": "oxygen_saturation",
+          "observation_en": "Check oxygen saturation with the pulse oximeter. What is the reading in percent?",
+          "observation_hi": "Pulse oximeter से oxygen saturation देखिए। कितने प्रतिशत है?",
+          "type": "number",
+          "range": [
+            50,
+            100
+          ]
+        }
+      ],
+      "derived": {
+        "fast_breathing": {
+          "description": "Age-dependent threshold. Lower bound inclusive, upper bound exclusive.",
+          "source_page": "09",
+          "thresholds": [
+            {
+              "age_months_min": 2,
+              "age_months_max": 12,
+              "breaths_per_min_at_or_above": 50
+            },
+            {
+              "age_months_min": 12,
+              "age_months_max": 60,
+              "breaths_per_min_at_or_above": 40
+            }
+          ],
+          "verified": true,
+          "source_check": {
+            "method": "ai-compared-to-booklet",
+            "date": "2026-10-13",
+            "quote": "2-11 months ≥ 50/min 12-59 months ≥ 40/min"
+          }
+        }
+      },
+      "classifications": [
+        {
+          "id": "severe_pneumonia_or_very_severe_disease",
+          "name": "SEVERE PNEUMONIA OR VERY SEVERE DISEASE",
+          "band": "pink",
+          "requires": {
+            "or": [
+              {
+                "any_of": [
+                  "general_danger_sign",
+                  "chest_indrawing"
+                ]
+              },
+              {
+                "oxygen_saturation_below": 90
+              }
+            ]
+          },
+          "imnci_action": "Give pre-referral dose of oral amoxycillin & IM gentamicin. Refer URGENTLY to hospital.",
+          "asha_action": "Refer URGENTLY to the nearest facility. Keep the child warm and continue breastfeeding if possible. Do not wait.",
+          "refer": true,
+          "source_page": "09",
+          "verified": true,
+          "source_check": {
+            "method": "ai-compared-to-booklet",
+            "date": "2026-10-13",
+            "quote": "Chest indrawing or Oxygen saturation < 90%"
+          }
+        },
+        {
+          "id": "pneumonia",
+          "name": "PNEUMONIA",
+          "band": "yellow",
+          "requires": {
+            "all_of": [
+              "fast_breathing"
+            ],
+            "none_of": [
+              "general_danger_sign",
+              "chest_indrawing"
+            ],
+            "oxygen_saturation_at_or_above": 90
+          },
+          "imnci_action": "Give amoxycillin for 5 days. Advise home care for cough and cold. Follow-up after 2 days.",
+          "asha_action": "Amoxicillin is required. If it is not in your kit, refer to the sub-centre or PHC the same day for treatment. Advise home care for cough and cold, and when to return immediately.",
+          "refer": true,
+          "follow_up_days": 2,
+          "source_page": "09",
+          "verified": true,
+          "source_check": {
+            "method": "ai-compared-to-booklet",
+            "date": "2026-10-13",
+            "quote": "Give amoxycillin for 5 days."
+          }
+        },
+        {
+          "id": "no_pneumonia_cough_or_cold",
+          "name": "NO PNEUMONIA: COUGH OR COLD",
+          "band": "green",
+          "requires": {
+            "none_of": [
+              "general_danger_sign",
+              "chest_indrawing",
+              "fast_breathing"
+            ],
+            "oxygen_saturation_at_or_above": 90
+          },
+          "imnci_action": "Advise home care for cough and cold. If coughing for more than 14 days, refer for assessment. Follow up after 5 days, if not improving.",
+          "asha_action": "Home care for cough and cold. Counsel the mother on danger signs. Follow up in 5 days if not improving. If the cough has lasted more than 14 days, refer for assessment.",
+          "refer": false,
+          "escalate_if": {
+            "cough_duration_days_above": 14,
+            "then": "refer for assessment (cough for more than 14 days)"
+          },
+          "follow_up_days": 5,
+          "source_page": "09",
+          "verified": true,
+          "source_check": {
+            "method": "ai-compared-to-booklet",
+            "date": "2026-10-13",
+            "quote": "If coughing for more than 14 days, refer for assessment"
+          }
+        }
+      ]
+    },
+    {
+      "id": "diarrhoea",
+      "title": "Diarrhoea",
+      "source_page": "10",
+      "trigger": {
+        "question_en": "Does the child have diarrhoea?",
+        "question_hi": "क्या बच्चे को दस्त हो रहे हैं?"
+      },
+      "ask": [
+        {
+          "id": "diarrhoea_duration_days",
+          "question_en": "For how long?",
+          "question_hi": "दस्त कितने दिनों से हैं?",
+          "type": "number_days"
+        },
+        {
+          "id": "blood_in_stool",
+          "question_en": "Is there blood in the stool?",
+          "question_hi": "क्या दस्त में खून आ रहा है?"
+        }
+      ],
+      "look": [
+        {
+          "id": "lethargic_unconscious",
+          "observation_en": "Is the child lethargic or unconscious?",
+          "observation_hi": "क्या बच्चा सुस्त है या बेहोश है?"
+        },
+        {
+          "id": "restless_irritable",
+          "observation_en": "Is the child restless and irritable?",
+          "observation_hi": "क्या बच्चा बेचैन है या चिड़चिड़ा है?"
+        },
+        {
+          "id": "sunken_eyes",
+          "observation_en": "Look for sunken eyes",
+          "observation_hi": "क्या बच्चे की आँखें धँसी हुई हैं?"
+        },
+        {
+          "id": "drinks_poorly",
+          "observation_en": "Offer the child fluid: not able to drink or drinking poorly?",
+          "observation_hi": "बच्चे को पीने को दीजिए: क्या वह पी नहीं पा रहा या बहुत कम पी रहा है?"
+        },
+        {
+          "id": "drinks_eagerly",
+          "observation_en": "Offer the child fluid: drinking eagerly, thirsty?",
+          "observation_hi": "बच्चे को पीने को दीजिए: क्या वह प्यास से जल्दी-जल्दी पी रहा है?"
+        },
+        {
+          "id": "skin_pinch_very_slow",
+          "observation_en": "Pinch the skin of the abdomen: does it go back very slowly (longer than 2 seconds)?",
+          "observation_hi": "पेट की त्वचा चुटकी से पकड़कर छोड़िए: क्या वह बहुत धीरे (2 सेकंड से ज़्यादा में) वापस जाती है?"
+        },
+        {
+          "id": "skin_pinch_slow",
+          "observation_en": "Pinch the skin of the abdomen: does it go back slowly?",
+          "observation_hi": "पेट की त्वचा चुटकी से पकड़कर छोड़िए: क्या वह धीरे वापस जाती है?"
+        }
+      ],
+      "classification_groups": [
+        {
+          "group": "dehydration",
+          "note": "Severe and some dehydration each require TWO OR MORE of their listed signs.",
+          "escalate_if": {
+            "or": [
+              {
+                "blood_in_stool": true
+              },
+              {
+                "diarrhoea_duration_days_at_or_above": 14
+              }
+            ],
+            "then": "refer to hospital (blood in stool or diarrhoea 14 days or more)",
+            "source_page": "10",
+            "verified": true,
+            "source_check": {
+              "method": "ai-compared-to-booklet",
+              "date": "2026-10-13",
+              "quote": "If blood in stool or diarrhoea ≥ 14 days, refer to hospital."
+            }
+          },
+          "classifications": [
+            {
+              "id": "severe_dehydration",
+              "name": "SEVERE DEHYDRATION",
+              "band": "pink",
+              "requires": {
+                "min_count": 2,
+                "from": [
+                  "lethargic_unconscious",
+                  "sunken_eyes",
+                  "drinks_poorly",
+                  "skin_pinch_very_slow"
+                ]
+              },
+              "imnci_action": "Refer URGENTLY to hospital with mother giving frequent sips of ORS on the way. Advise the mother to continue breastfeeding.",
+              "asha_action": "Refer URGENTLY. Start ORS immediately and have the mother give frequent sips on the way. Continue breastfeeding.",
+              "refer": true,
+              "source_page": "10",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Refer URGENTLY to hospital with mother giving frequent sips of ORS on the way."
+              }
+            },
+            {
+              "id": "some_dehydration",
+              "name": "SOME DEHYDRATION",
+              "band": "yellow",
+              "requires": {
+                "min_count": 2,
+                "from": [
+                  "restless_irritable",
+                  "sunken_eyes",
+                  "drinks_eagerly",
+                  "skin_pinch_slow"
+                ]
+              },
+              "imnci_action": "Give fluids, zinc supplements and food for some dehydration (Plan B). Follow-up after 2 days if not improving. Advice when to return immediately.",
+              "asha_action": "Give ORS and zinc. Counsel the mother on how to give ORS at home and on danger signs. Follow up after 2 days if not improving. Refer if the child worsens or cannot keep fluids down.",
+              "refer": false,
+              "follow_up_days": 2,
+              "source_page": "10",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Follow-up after 2 days if not improving."
+              }
+            },
+            {
+              "id": "no_dehydration",
+              "name": "NO DEHYDRATION",
+              "band": "green",
+              "requires": {
+                "otherwise": true
+              },
+              "imnci_action": "Give fluids, zinc supplements and food to treat diarrhoea at home (Plan A). Follow-up after 5 days if not improving. Advice when to return immediately.",
+              "asha_action": "Plan A at home: extra fluids, ORS, zinc, continue feeding. Counsel on danger signs. Follow up after 5 days if not improving.",
+              "refer": false,
+              "follow_up_days": 5,
+              "source_page": "10",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Not enough signs to classify as some or severe dehydration."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fever",
+      "title": "Fever",
+      "source_page": "10",
+      "trigger": {
+        "question_en": "Does the child have fever? (by history, feels hot, or temperature 37.5 C or above)",
+        "question_hi": "क्या बच्चे को बुखार है? (माँ ने बताया हो, छूने पर गरम लगे, या तापमान 37.5 डिग्री या ज़्यादा हो)",
+        "note": "37.5 C is the axillary cutoff."
+      },
+      "context": [
+        {
+          "id": "pf_predominant_area",
+          "note": "The booklet asks 'Is it a PF (p. falciparum) predominant area? Yes/No'. It decides whether an RDT is done in every fever case, not which row applies. Not modelled by the engine."
+        }
+      ],
+      "ask": [
+        {
+          "id": "fever_duration_days",
+          "question_en": "Fever for how long?",
+          "question_hi": "बुखार कितने दिनों से है?",
+          "type": "number_days"
+        },
+        {
+          "id": "fever_daily_over_7_days",
+          "question_en": "Has the fever been present every day?",
+          "question_hi": "क्या बुखार हर दिन रहा है?",
+          "ask_if": {
+            "fever_duration_days_above": 7
+          }
+        }
+      ],
+      "look": [
+        {
+          "id": "stiff_neck",
+          "observation_en": "Look or feel for stiff neck",
+          "observation_hi": "क्या बच्चे की गर्दन अकड़ी हुई है?"
+        },
+        {
+          "id": "other_cause_of_fever",
+          "observation_en": "Look for any other focus of fever, such as cough or cold, pneumonia, diarrhoea, dysentery, skin infection, dengue or measles",
+          "observation_hi": "क्या बुखार का कोई और कारण दिख रहा है, जैसे खाँसी-ज़ुकाम, निमोनिया, दस्त, पेचिश, त्वचा का संक्रमण, डेंगू या खसरा?",
+          "source_page": "10",
+          "source_quote": "Look for any other focus of fever"
+        },
+        {
+          "id": "rdt_result",
+          "observation_en": "Do an RDT for malaria. Is it positive, negative, or is RDT not available?",
+          "observation_hi": "मलेरिया की RDT जाँच कीजिए। क्या वह positive है, negative है, या RDT उपलब्ध नहीं है?",
+          "type": "enum",
+          "values": [
+            "positive",
+            "negative",
+            "not_available"
+          ],
+          "source_page": "10",
+          "source_quote": "Do RDT for malaria in all fever cases if it is PF predominant area and if no obvious cause of fever is present in other areas or malaria suspected"
+        }
+      ],
+      "classification_groups": [
+        {
+          "group": "fever",
+          "classifications": [
+            {
+              "id": "very_severe_febrile_disease",
+              "name": "VERY SEVERE FEBRILE DISEASE",
+              "band": "pink",
+              "requires": {
+                "any_of": [
+                  "general_danger_sign",
+                  "stiff_neck"
+                ]
+              },
+              "imnci_action": "Give first dose of oral amoxycillin and IM gentamicin. Treat the child to prevent low blood sugar. Give one dose of paracetamol for high fever (temp. 38.5 C/101.3 F or above). Refer URGENTLY to hospital.",
+              "asha_action": "Refer URGENTLY. These are facility treatments, not ASHA actions. Keep the child warm, continue breastfeeding if the child can drink, and do not delay transport.",
+              "refer": true,
+              "source_page": "10",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Any general danger sign or Stiff Neck"
+              }
+            },
+            {
+              "id": "malaria",
+              "name": "MALARIA/ SUSPECTED MALARIA",
+              "band": "yellow",
+              "requires": {
+                "or": [
+                  {
+                    "equals": {
+                      "rdt_result": "positive"
+                    }
+                  },
+                  {
+                    "equals": {
+                      "rdt_result": "not_available"
+                    },
+                    "none_of": [
+                      "other_cause_of_fever"
+                    ]
+                  }
+                ]
+              },
+              "imnci_action": "Give oral antimalarial as per national guidelines after making a smear. Give one dose of paracetamol in clinic for high fever (temp. 38.5 C/101.3 F or above). Advise mother when to return immediately. Follow-up after 2 days.",
+              "asha_action": "Antimalarial treatment as per national guidelines is needed. If you are not trained and supplied for it, refer the same day. Paracetamol for high fever. Advise the mother when to return immediately. Follow up after 2 days.",
+              "refer": true,
+              "follow_up_days": 2,
+              "source_page": "10",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Positive RDT or RDT not available and no other obvious cause of fever"
+              }
+            },
+            {
+              "id": "fever_malaria_unlikely",
+              "name": "FEVER - MALARIA UNLIKELY",
+              "band": "yellow",
+              "requires": {
+                "or": [
+                  {
+                    "equals": {
+                      "rdt_result": "negative"
+                    }
+                  },
+                  {
+                    "any_of": [
+                      "other_cause_of_fever"
+                    ]
+                  }
+                ]
+              },
+              "imnci_action": "Give one dose of paracetamol in clinic for high fever (temp. 38.5 C/101.3 F or above). Give appropriate treatment for an identified cause of fever. Advise mother when to return immediately. Follow-up after 2 days if fever persists. If fever is present every day for more than 7 days, refer for assessment.",
+              "asha_action": "Paracetamol for high fever. Look after the other cause of fever as you are trained to, or refer for it. Advise the mother when to return immediately. Follow up after 2 days if the fever persists.",
+              "refer": false,
+              "escalate_if": {
+                "fever_duration_days_above": 7,
+                "fever_daily_over_7_days": true,
+                "then": "refer for assessment (fever every day for more than 7 days)"
+              },
+              "follow_up_days": 2,
+              "source_page": "10",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Negative RDT and/or other causes of fever PRESENT"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "malnutrition_anaemia",
+      "title": "Malnutrition and anaemia",
+      "source_page": "11",
+      "look": [
+        {
+          "id": "wfl_band",
+          "observation_en": "Measure weight and length or height, plot weight-for-length on the MCP card. Is it red, yellow or green? Say 'not measured' if you could not measure.",
+          "observation_hi": "वज़न और लंबाई नापकर MCP card पर weight-for-length देखिए। लाल, पीला या हरा? अगर नाप नहीं पाए तो बताइए।",
+          "type": "enum",
+          "values": [
+            "below_minus_3sd",
+            "minus_3_to_minus_2sd",
+            "at_or_above_minus_2sd",
+            "not_measured"
+          ],
+          "note": "MCP card colours: red is WFL < -3 SD, yellow is WFL < -2 SD, green is WFL >= -2 SD."
+        },
+        {
+          "id": "visible_severe_wasting",
+          "observation_en": "Look for visible severe wasting",
+          "observation_hi": "क्या बच्चा देखने में बहुत ज़्यादा दुबला, सूखा हुआ है?",
+          "ask_if": {
+            "equals": {
+              "wfl_band": "not_measured"
+            }
+          }
+        },
+        {
+          "id": "oedema_both_feet",
+          "observation_en": "Look for oedema of both feet",
+          "observation_hi": "क्या बच्चे के दोनों पैरों में सूजन है?"
+        },
+        {
+          "id": "muac_cm",
+          "observation_en": "Measure MUAC (mid-upper arm circumference). How many cm?",
+          "observation_hi": "MUAC tape से बच्चे की बाँह नापिए। कितने cm है?",
+          "type": "number",
+          "range": [
+            5,
+            30
+          ],
+          "ask_if": {
+            "age_months_at_or_above": 6
+          }
+        },
+        {
+          "id": "palmar_pallor",
+          "observation_en": "Look for palmar pallor. Is it severe, some, or none?",
+          "observation_hi": "बच्चे की हथेली देखिए। क्या वह बहुत ज़्यादा पीली है, थोड़ी पीली है, या सामान्य है?",
+          "type": "enum",
+          "values": [
+            "severe",
+            "some",
+            "none"
+          ]
+        }
+      ],
+      "classification_groups": [
+        {
+          "group": "nutrition",
+          "classifications": [
+            {
+              "id": "severe_acute_malnutrition",
+              "name": "SEVERE ACUTE MALNUTRITION",
+              "band": "pink",
+              "requires": {
+                "or": [
+                  {
+                    "equals": {
+                      "wfl_band": "below_minus_3sd"
+                    }
+                  },
+                  {
+                    "age_months_at_or_above": 6,
+                    "muac_cm_below": 11.5
+                  },
+                  {
+                    "any_of": [
+                      "oedema_both_feet"
+                    ]
+                  },
+                  {
+                    "equals": {
+                      "wfl_band": "not_measured"
+                    },
+                    "any_of": [
+                      "visible_severe_wasting"
+                    ]
+                  }
+                ]
+              },
+              "imnci_action": "Give first dose of oral amoxycillin and IM gentamicin. Treat the child to prevent low blood sugar. Refer URGENTLY to hospital. Keep the child warm on the way to hospital.",
+              "asha_action": "Refer URGENTLY. Keep the child warm on the way to hospital. Continue breastfeeding or feeding if the child can take it.",
+              "refer": true,
+              "source_page": "11",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "WFL <-3 SD score (red color on MCP card)* and/or MUAC <11.5 cm and/or Oedema of both feet"
+              }
+            },
+            {
+              "id": "moderate_acute_malnutrition",
+              "name": "MODERATE ACUTE MALNUTRITION",
+              "band": "yellow",
+              "requires": {
+                "or": [
+                  {
+                    "equals": {
+                      "wfl_band": "minus_3_to_minus_2sd"
+                    }
+                  },
+                  {
+                    "age_months_at_or_above": 6,
+                    "muac_cm_at_or_above": 11.5,
+                    "muac_cm_below": 12.5
+                  }
+                ],
+                "none_of": [
+                  "oedema_both_feet"
+                ]
+              },
+              "imnci_action": "Assess feeding and counsel the mother on how to feed the child. Advise mother when to return immediately. Follow-up after 30 days.",
+              "asha_action": "Assess feeding and counsel the mother on how to feed the child. Advise when to return immediately. Follow up after 30 days.",
+              "refer": false,
+              "follow_up_days": 30,
+              "source_page": "11",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "WFL <-2 SD score (yellow color on MCP card) and/or MUAC 11.5–12.4 cm and No Oedema of both feet"
+              }
+            },
+            {
+              "id": "no_acute_malnutrition",
+              "name": "NO ACUTE MALNUTRITION",
+              "band": "green",
+              "requires": {
+                "equals": {
+                  "wfl_band": "at_or_above_minus_2sd"
+                },
+                "or": [
+                  {
+                    "age_months_below": 6
+                  },
+                  {
+                    "muac_cm_at_or_above": 12.5
+                  }
+                ],
+                "none_of": [
+                  "oedema_both_feet"
+                ]
+              },
+              "imnci_action": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart. If feeding problem, follow-up in 5 days. Advise mother when to return immediately.",
+              "asha_action": "If the child is under 2 years, assess feeding and counsel the mother. If there is a feeding problem, follow up in 5 days. Advise when to return immediately.",
+              "refer": false,
+              "source_page": "11",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "WFL ≥ -2SD score and MUAC ≥ 12.5 cm and No Oedema of both feet"
+              }
+            }
+          ]
+        },
+        {
+          "group": "anaemia",
+          "classifications": [
+            {
+              "id": "severe_anaemia",
+              "name": "SEVERE ANEMIA",
+              "band": "pink",
+              "requires": {
+                "equals": {
+                  "palmar_pallor": "severe"
+                }
+              },
+              "imnci_action": "Refer URGENTLY to hospital.",
+              "asha_action": "Refer URGENTLY.",
+              "refer": true,
+              "source_page": "11",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Severe palmar pallor"
+              }
+            },
+            {
+              "id": "anaemia",
+              "name": "ANEMIA",
+              "band": "yellow",
+              "requires": {
+                "equals": {
+                  "palmar_pallor": "some"
+                }
+              },
+              "imnci_action": "Give iron folic acid therapy for 14 days. Assess the child's feeding and counsel the mother on feeding. If feeding problem, follow-up after 5 days. Follow-up after 14 days.",
+              "asha_action": "Give paediatric IFA for 14 days. Assess feeding and counsel the mother. Follow up after 14 days, or after 5 days if there is a feeding problem.",
+              "refer": false,
+              "follow_up_days": 14,
+              "source_page": "11",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Give iron folic acid therapy for 14 days"
+              }
+            },
+            {
+              "id": "no_anaemia",
+              "name": "NO ANEMIA",
+              "band": "green",
+              "requires": {
+                "equals": {
+                  "palmar_pallor": "none"
+                }
+              },
+              "imnci_action": "Give prophylactic iron folic acid if child 6 months or older.",
+              "asha_action": "If the child is 6 months or older, give prophylactic IFA syrup (1 ml twice a week) after recovery from the acute illness.",
+              "refer": false,
+              "source_page": "11",
+              "verified": true,
+              "source_check": {
+                "method": "ai-compared-to-booklet",
+                "date": "2026-10-13",
+                "quote": "Give prophylactic iron folic acid if child 6 months or older."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "retired_rules": [
+    {
+      "id": "stridor",
+      "was": "Sign in SEVERE PNEUMONIA OR VERY SEVERE DISEASE",
+      "reason": "Not in the 2023 health-worker booklet page 09. Replaced by oxygen saturation < 90%."
+    },
+    {
+      "id": "bulging_fontanelle",
+      "was": "Sign in VERY SEVERE FEBRILE DISEASE",
+      "reason": "Not in the 2023 health-worker booklet page 10."
+    },
+    {
+      "id": "runny_nose",
+      "was": "Sign in the malaria-risk fever rows",
+      "reason": "The 2023 booklet classifies fever by RDT result and 'any other focus of fever' instead."
+    },
+    {
+      "id": "severe_persistent_diarrhoea",
+      "name": "SEVERE PERSISTENT DIARRHOEA",
+      "reason": "No such row in the 2023 health-worker booklet. Page 10 says 'If blood in stool or diarrhoea ≥ 14 days, refer to hospital', modelled as an escalation on the dehydration table."
+    },
+    {
+      "id": "persistent_diarrhoea",
+      "name": "PERSISTENT DIARRHOEA",
+      "reason": "As above."
+    },
+    {
+      "id": "dysentery",
+      "name": "DYSENTERY",
+      "reason": "As above."
+    },
+    {
+      "id": "malaria_high_risk_row",
+      "name": "MALARIA (applies_when malaria_risk high)",
+      "reason": "Replaced by the 2023 RDT-based rows on page 10."
+    },
+    {
+      "id": "fever_malaria_unlikely_low_risk_row",
+      "name": "FEVER: MALARIA UNLIKELY (green, malaria_risk low)",
+      "reason": "The 2023 row is yellow and RDT-based, page 10."
+    },
+    {
+      "id": "severe_malnutrition",
+      "name": "VERY LOW WEIGHT / SEVERE MALNUTRITION",
+      "reason": "The 2023 booklet uses weight-for-length, MUAC and oedema: SEVERE ACUTE MALNUTRITION, page 11."
+    },
+    {
+      "id": "not_very_low_weight",
+      "name": "NOT VERY LOW WEIGHT",
+      "reason": "Replaced by MODERATE ACUTE MALNUTRITION and NO ACUTE MALNUTRITION, page 11."
+    },
+    {
+      "id": "mastoiditis",
+      "name": "MASTOIDITIS",
+      "band": "pink",
+      "requires": {
+        "any_of": [
+          "tender_swelling_behind_ear"
+        ]
+      },
+      "imnci_action": "Give first dose of injectable chloramphenicol (oral amoxicillin if not possible). Give first dose of paracetamol for pain. Refer URGENTLY to hospital.",
+      "asha_action": "Refer URGENTLY. Paracetamol for pain while arranging transport.",
+      "refer": true,
+      "source_page": "older IMNCI chart booklet, page 15",
+      "verified": false,
+      "source_check": {
+        "method": "not-confirmed",
+        "reason": "The 2023 health-worker chart booklet has no ear problem assessment (pages 09-11). Row carried over from the older booklet."
+      },
+      "assessment": "ear_problem",
+      "reason": "not in the 2023 health-worker booklet; kept for reference"
+    },
+    {
+      "id": "acute_ear_infection",
+      "name": "ACUTE EAR INFECTION",
+      "band": "yellow",
+      "requires": {
+        "any_of": [
+          "ear_pain",
+          "pus_draining_from_ear"
+        ],
+        "and": {
+          "ear_discharge_days_below": 14
+        }
+      },
+      "imnci_action": "Give amoxicillin for 5 days. Give paracetamol for pain. Dry the ear by wicking. Follow up in 5 days.",
+      "asha_action": "Refer to the sub-centre or PHC for the antibiotic. Paracetamol for pain. Show the mother how to dry the ear by wicking. Follow up in 5 days.",
+      "refer": true,
+      "follow_up_days": 5,
+      "source_page": "older IMNCI chart booklet, page 15",
+      "verified": false,
+      "source_check": {
+        "method": "not-confirmed",
+        "reason": "The 2023 health-worker chart booklet has no ear problem assessment (pages 09-11). Row carried over from the older booklet."
+      },
+      "assessment": "ear_problem",
+      "reason": "not in the 2023 health-worker booklet; kept for reference"
+    },
+    {
+      "id": "chronic_ear_infection",
+      "name": "CHRONIC EAR INFECTION",
+      "band": "yellow",
+      "requires": {
+        "all_of": [
+          "pus_draining_from_ear"
+        ],
+        "and": {
+          "ear_discharge_days_at_or_above": 14
+        },
+        "none_of": [
+          "tender_swelling_behind_ear"
+        ]
+      },
+      "imnci_action": "Dry the ear by wicking. Give topical ciprofloxacin ear drops for 2 weeks. Follow up in 5 days.",
+      "asha_action": "Show the mother how to dry the ear by wicking. Refer for ear drops. Follow up in 5 days.",
+      "refer": true,
+      "follow_up_days": 5,
+      "source_page": "older IMNCI chart booklet, page 15",
+      "verified": false,
+      "source_check": {
+        "method": "not-confirmed",
+        "reason": "The 2023 health-worker chart booklet has no ear problem assessment (pages 09-11). Row carried over from the older booklet."
+      },
+      "assessment": "ear_problem",
+      "reason": "not in the 2023 health-worker booklet; kept for reference"
+    },
+    {
+      "id": "no_ear_infection",
+      "name": "NO EAR INFECTION",
+      "band": "green",
+      "requires": {
+        "none_of": [
+          "ear_pain",
+          "pus_draining_from_ear",
+          "tender_swelling_behind_ear"
+        ]
+      },
+      "imnci_action": "No additional treatment.",
+      "asha_action": "No treatment needed for the ear. Counsel on danger signs.",
+      "refer": false,
+      "source_page": "older IMNCI chart booklet, page 15",
+      "verified": false,
+      "source_check": {
+        "method": "not-confirmed",
+        "reason": "The 2023 health-worker chart booklet has no ear problem assessment (pages 09-11). Row carried over from the older booklet."
+      },
+      "assessment": "ear_problem",
+      "reason": "not in the 2023 health-worker booklet; kept for reference"
+    },
+    {
+      "id": "severe_complicated_measles",
+      "name": "SEVERE COMPLICATED MEASLES",
+      "band": "pink",
+      "requires": {
+        "any_of": [
+          "general_danger_sign",
+          "corneal_clouding",
+          "mouth_ulcers_deep_extensive"
+        ]
+      },
+      "imnci_action": "Give first dose of vitamin A. Give first dose of injectable chloramphenicol (or oral amoxicillin if injection is not possible). If there is corneal clouding or pus from the eye, apply tetracycline eye ointment. Refer URGENTLY to hospital.",
+      "asha_action": "Refer URGENTLY. Do not attempt eye treatment yourself.",
+      "refer": true,
+      "source_page": "older IMNCI chart booklet, fever section",
+      "verified": false,
+      "source_check": {
+        "method": "not-confirmed",
+        "reason": "The 2023 health-worker chart booklet has no measles classification table (pages 09-11). Row carried over from the older booklet."
+      },
+      "assessment": "fever (measles group)",
+      "applies_when": {
+        "any_of": [
+          "measles_signs",
+          "measles_last_3_months"
+        ]
+      },
+      "reason": "not in the 2023 health-worker booklet; kept for reference"
+    },
+    {
+      "id": "measles_with_eye_or_mouth_complications",
+      "name": "MEASLES WITH EYE OR MOUTH COMPLICATIONS",
+      "band": "yellow",
+      "requires": {
+        "any_of": [
+          "pus_from_eye",
+          "mouth_ulcers"
+        ]
+      },
+      "imnci_action": "Give first dose of vitamin A. If eye pus, treat with tetracycline eye ointment. If mouth ulcers, treat with gentian violet. Follow up in 2 days.",
+      "asha_action": "Refer to the sub-centre or PHC for vitamin A and eye or mouth treatment. Follow up in 2 days.",
+      "refer": true,
+      "follow_up_days": 2,
+      "source_page": "older IMNCI chart booklet, fever section",
+      "verified": false,
+      "source_check": {
+        "method": "not-confirmed",
+        "reason": "The 2023 health-worker chart booklet has no measles classification table (pages 09-11). Row carried over from the older booklet."
+      },
+      "assessment": "fever (measles group)",
+      "applies_when": {
+        "any_of": [
+          "measles_signs",
+          "measles_last_3_months"
+        ]
+      },
+      "reason": "not in the 2023 health-worker booklet; kept for reference"
+    },
+    {
+      "id": "measles",
+      "name": "MEASLES",
+      "band": "green",
+      "requires": {
+        "otherwise": true
+      },
+      "imnci_action": "Give first dose of vitamin A.",
+      "asha_action": "Refer for the vitamin A dose. Counsel the mother on feeding and danger signs.",
+      "refer": true,
+      "source_page": "older IMNCI chart booklet, fever section",
+      "verified": false,
+      "source_check": {
+        "method": "not-confirmed",
+        "reason": "The 2023 health-worker chart booklet has no measles classification table (pages 09-11). Row carried over from the older booklet."
+      },
+      "assessment": "fever (measles group)",
+      "applies_when": {
+        "any_of": [
+          "measles_signs",
+          "measles_last_3_months"
+        ]
+      },
+      "reason": "not in the 2023 health-worker booklet; kept for reference"
+    }
+  ],
+  "classification_order": [
+    "Check general danger signs FIRST and always.",
+    "Then assess each main symptom the child has.",
+    "A child can fall into several classifications at once. Use every box that fits.",
+    "If ANY pink classification applies, the outcome is urgent referral regardless of the other bands."
+  ]
+}

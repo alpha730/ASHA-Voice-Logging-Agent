@@ -1,0 +1,327 @@
+/**
+ * The voice question flow for the IMNCI sick child pathway. Pure: no network, no model.
+ *
+ * Questions come from the protocol JSON in its own order: general danger signs first, then each
+ * assessment's trigger, then its ask and look items. A step is skipped once its signs are known,
+ * and a follow-up step waits for its ask_if condition in the JSON.
+ * Measurement steps (breath count, oxygen saturation, skin pinch, MCP card, MUAC, palms) are only
+ * ever filled from the worker's answer to that step, parsed without a model, never from narrative.
+ */
+import {
+  AGE_MAX_MONTHS,
+  AGE_MIN_MONTHS,
+  triggerSign,
+  type Condition,
+  type ImnciProtocol,
+  type ProtocolItem,
+  type SignValue,
+  type Signs,
+} from "./rules.ts";
+
+export type Lang = "hi" | "en";
+export type StepKind = "yesno" | "days" | "count" | "choice";
+
+export interface Step {
+  key: string; // the sign id, or a group name for a combined observation
+  signs: string[]; // sign ids this step fills
+  kind: StepKind;
+  measurement: boolean; // she must count or test; never filled from narrative or by the model
+  look: boolean; // an observation item: she checks the child rather than asks the mother
+  assessment: string; // "general_danger_signs", "cough", ...
+  prompt: { en: string; hi: string | null }; // hi is null when the protocol has no Hindi text
+  positiveWhen: "yes" | "no"; // for yesno: which answer makes the sign true
+  choices?: Record<string, Record<string, SignValue>>; // for choice: answer -> sign values
+  range?: [number, number]; // for count: plausible values; anything outside is asked again
+  askIf?: Condition; // from the JSON: only asked once this holds
+  appAuthored?: boolean; // prompt text written by the app, not taken from the protocol JSON
+}
+
+/** Two-way look items that are really one observation with three answers. */
+const GROUPS: { key: string; signs: string[]; prompt: { en: string; hi: string }; choices: Record<string, Record<string, SignValue>> }[] = [
+  {
+    key: "skin_pinch",
+    signs: ["skin_pinch_very_slow", "skin_pinch_slow"],
+    prompt: {
+      en: "Pinch the skin of the abdomen and let go. Does it go back very slowly (longer than 2 seconds), slowly, or immediately?",
+      hi: "पेट की त्वचा चुटकी से पकड़कर छोड़िए। क्या वह बहुत धीरे (2 सेकंड से ज़्यादा में), धीरे, या तुरंत वापस जाती है?",
+    },
+    choices: {
+      very_slow: { skin_pinch_very_slow: true, skin_pinch_slow: false },
+      slow: { skin_pinch_very_slow: false, skin_pinch_slow: true },
+      immediately: { skin_pinch_very_slow: false, skin_pinch_slow: false },
+    },
+  },
+  {
+    key: "offer_fluid",
+    signs: ["drinks_poorly", "drinks_eagerly"],
+    prompt: {
+      en: "Offer the child fluid. Is the child not able to drink or drinking poorly, drinking eagerly and thirsty, or drinking normally?",
+      hi: "बच्चे को पीने को दीजिए। क्या वह पी नहीं पा रहा या बहुत कम पी रहा है, प्यास से जल्दी-जल्दी पी रहा है, या सामान्य पी रहा है?",
+    },
+    choices: {
+      poorly: { drinks_poorly: true, drinks_eagerly: false },
+      eagerly: { drinks_poorly: false, drinks_eagerly: true },
+      normally: { drinks_poorly: false, drinks_eagerly: false },
+    },
+  },
+];
+
+function itemStep(item: ProtocolItem, assessment: string, look: boolean): Step {
+  const text = item.question_en ?? item.observation_en ?? item.id;
+  const hi = item.question_hi ?? item.observation_hi ?? null;
+  const base: Omit<Step, "kind" | "measurement"> = {
+    key: item.id,
+    signs: [item.id],
+    assessment,
+    look,
+    prompt: { en: text, hi },
+    positiveWhen: item.positive_when ?? "yes",
+    askIf: item.ask_if,
+  };
+  // Counted or read off an instrument: breaths, oxygen saturation, MUAC.
+  if (item.type === "number") return { ...base, kind: "count", measurement: true, range: item.range };
+  // Chosen from a fixed list: MCP card colour, RDT result, palmar pallor.
+  if (item.type === "enum") {
+    const choices = Object.fromEntries((item.values ?? []).map((v) => [v, { [item.id]: v }]));
+    return { ...base, kind: "choice", measurement: true, choices };
+  }
+  if (item.type === "number_days") return { ...base, kind: "days", measurement: false };
+  return { ...base, kind: "yesno", measurement: false };
+}
+
+/** Every step of the pathway, in protocol order. */
+export function buildSteps(protocol: ImnciProtocol): Step[] {
+  const steps: Step[] = [];
+  const seen = new Set<string>();
+  const push = (s: Step) => {
+    if (s.signs.every((id) => seen.has(id))) return; // lethargic_unconscious is listed twice
+    s.signs.forEach((id) => seen.add(id));
+    steps.push(s);
+  };
+
+  const gds = protocol.general_danger_signs;
+  for (const item of gds.ask) push(itemStep(item, "general_danger_signs", false));
+  for (const item of gds.look) push(itemStep(item, "general_danger_signs", true));
+
+  for (const a of protocol.assessments) {
+    if (a.trigger) {
+      push({
+        key: triggerSign(a.id),
+        signs: [triggerSign(a.id)],
+        kind: "yesno",
+        measurement: false,
+        look: false,
+        assessment: a.id,
+        prompt: { en: a.trigger.question_en, hi: a.trigger.question_hi ?? null },
+        positiveWhen: "yes",
+      });
+    }
+    const items = [...(a.ask ?? []).map((i) => [i, false] as const), ...(a.look ?? []).map((i) => [i, true] as const)];
+    for (const [item, look] of items) {
+      const group = GROUPS.find((g) => g.signs.includes(item.id));
+      if (group) {
+        push({
+          key: group.key,
+          signs: group.signs,
+          kind: "choice",
+          measurement: true,
+          look: true,
+          assessment: a.id,
+          prompt: group.prompt,
+          positiveWhen: "yes",
+          choices: group.choices,
+          appAuthored: true,
+        });
+      } else {
+        push(itemStep(item, a.id, look));
+      }
+    }
+  }
+  return steps;
+}
+
+const answered = (s: Signs, id: string) => s[id] !== null && s[id] !== undefined;
+
+/**
+ * The next question to ask, or null when every relevant step is answered or skipped.
+ * `check` decides a step's ask_if condition (rules.holds with the current signs and age).
+ */
+export function nextStep(
+  steps: Step[],
+  signs: Signs,
+  skipped: string[] = [],
+  check: (cond: Condition) => boolean | null = () => true,
+): Step | null {
+  for (const step of steps) {
+    if (skipped.includes(step.key)) continue;
+    if (step.signs.every((id) => answered(signs, id))) continue;
+    // Assessments only run when their symptom is present; general danger signs and malnutrition always run.
+    const trigger = triggerSign(step.assessment);
+    if (step.key !== trigger && steps.some((s) => s.key === trigger) && signs[trigger] !== true) continue;
+    if (step.askIf && check(step.askIf) !== true) continue;
+    return step;
+  }
+  return null;
+}
+
+export function promptText(step: Step, lang: Lang): string {
+  const text = lang === "hi" && step.prompt.hi ? step.prompt.hi : step.prompt.en;
+  // A question that already asks for the reading ("How many cm?") needs no extra instruction.
+  if (step.kind === "count" && !/\?\s*$/.test(text)) return lang === "hi" ? `${text}। फिर नंबर बताइए।` : `${text}, then tell me the number.`;
+  if (step.look && step.kind === "yesno") return lang === "hi" ? `कृपया देखिए: ${text}` : `Please check: ${text}`;
+  return text;
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic answer parsing
+// ---------------------------------------------------------------------------
+
+const YES_RE = /\b(yes|yeah|haan|han|ha|hai|ji haan|bilkul|sahi)\b|हाँ|हां|जी हाँ/i;
+const NO_RE = /\b(no|nahi|nahin|nahi hai|na|not)\b|नहीं|नही/i;
+
+/** A clear yes or no. Null when both or neither appear, so the model or a re-ask decides. */
+export function parseYesNo(text: string): boolean | null {
+  const t = text.toLowerCase();
+  const no = NO_RE.test(t);
+  // "hai" alone is too weak to count as yes when a negation is also present.
+  const yes = YES_RE.test(t.replace(/\b(nahi|nahin)\s+hai\b/g, ""));
+  if (yes && !no) return true;
+  if (no && !yes) return false;
+  return null;
+}
+
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  ek: 1, do: 2, teen: 3, char: 4, chaar: 4, paanch: 5, panch: 5, chhe: 6, saat: 7, aath: 8, nau: 9, das: 10,
+  bees: 20, tees: 30, chalis: 40, chaalis: 40, pachas: 50, pachaas: 50, saath: 60, sattar: 70,
+  "एक": 1, "दो": 2, "तीन": 3, "चार": 4, "पांच": 5, "पाँच": 5, "सात": 7, "दस": 10,
+};
+
+/** The single number in an answer. Null when there is none or more than one, so nothing is guessed. */
+export function parseNumber(text: string): number | null {
+  text = text.replace(/[०-९]/g, (d) => String("०१२३४५६७८९".indexOf(d))); // Devanagari digits
+  const digits = text.match(/\d+(?:\.\d+)?/g);
+  if (digits) return digits.length === 1 ? Number(digits[0]) : null;
+  const words = text.toLowerCase().split(/[\s,.।?!]+/).filter((w) => w in NUMBER_WORDS);
+  return words.length === 1 ? NUMBER_WORDS[words[0]] : null;
+}
+
+/** "3 din", "do hafte", "a month" -> days. */
+export function parseDays(text: string): number | null {
+  const n = parseNumber(text) ?? (/\b(a|one|ek)\b/i.test(text) ? 1 : null);
+  if (n == null) return null;
+  if (/(week|hafte|hafta|हफ्ते|हफ़्ते)/i.test(text)) return n * 7;
+  if (/(month|mahine|mahina|महीने|महीना)/i.test(text)) return n * 30;
+  return n;
+}
+
+// Answer words per choice value, romanised and Devanagari (Sarvam's codemix writes Hindi in Devanagari).
+const CHOICE_WORDS: Record<string, RegExp> = {
+  very_slow: /(very slow|bahut dheere|bahut der|2 second|two second|do second|बहुत धीरे|बहुत देर|2 सेकंड|दो सेकंड)/i,
+  slow: /(slow|dheere|der se|धीरे|देर से)/i,
+  immediately: /(immediate|turant|jaldi|fauran|quick|normal|तुरंत|फ़ौरन|फौरन|जल्दी)/i,
+  poorly: /(poor|not able|unable|nahi pee|kam pee|thoda|mushkil|नहीं पी|कम पी|मुश्किल)/i,
+  eagerly: /(eager|thirst|pyaas|jaldi jaldi|zyada pee|gatagat|प्यास|जल्दी-जल्दी|जल्दी जल्दी|गटागट)/i,
+  normally: /(normal|theek|sahi|aam|सामान्य|ठीक)/i,
+  severe: /(severe|bahut|zyada|very pale|bilkul safed|बहुत|ज़्यादा|ज्यादा)/i,
+  some: /(some|thoda|thodi|halka|halki|kuch|mild|थोड़ा|थोड़ी|थोडी|हल्की|हल्का)/i,
+  none: /(none|no pallor|nahi|normal|theek|nahin|samanya|सामान्य|नहीं|ठीक)/i,
+  // MCP card weight-for-length colours.
+  below_minus_3sd: /(\bred\b|laal|\blal\b|लाल|minus 3|-3)/i,
+  minus_3_to_minus_2sd: /(yellow|peela|peeli|पीला|पीली|minus 2|-2)/i,
+  at_or_above_minus_2sd: /(green|hara|hari|हरा|हरी)/i,
+  not_measured: /(not measured|could not|couldn.?t|nahi naap|naap nahi|नाप नहीं|नहीं नाप)/i,
+  // Malaria RDT result.
+  positive: /(positive|पॉज़िटिव|पॉजिटिव)/i,
+  negative: /(negative|नेगेटिव)/i,
+  not_available: /(not available|not done|nahi hai|nahi hua|nahi kiya|उपलब्ध नहीं|नहीं है|नहीं किया|नहीं हुआ)/i,
+};
+
+/** How each choice is read back to the worker when an answer needs repeating. */
+const CHOICE_LABELS: Record<string, Record<Lang, string>> = {
+  very_slow: { en: "very slowly", hi: "बहुत धीरे" },
+  slow: { en: "slowly", hi: "धीरे" },
+  immediately: { en: "immediately", hi: "तुरंत" },
+  poorly: { en: "not able or poorly", hi: "नहीं पी पा रहा या कम" },
+  eagerly: { en: "eagerly, thirsty", hi: "प्यास से जल्दी-जल्दी" },
+  normally: { en: "normally", hi: "सामान्य" },
+  severe: { en: "severe", hi: "बहुत ज़्यादा" },
+  some: { en: "some", hi: "थोड़ी" },
+  none: { en: "none", hi: "सामान्य" },
+  below_minus_3sd: { en: "red", hi: "लाल" },
+  minus_3_to_minus_2sd: { en: "yellow", hi: "पीला" },
+  at_or_above_minus_2sd: { en: "green", hi: "हरा" },
+  not_measured: { en: "not measured", hi: "नाप नहीं पाए" },
+  positive: { en: "positive", hi: "positive" },
+  negative: { en: "negative", hi: "negative" },
+  not_available: { en: "not available", hi: "उपलब्ध नहीं" },
+};
+
+export function choiceLabels(step: Step, lang: Lang): string[] {
+  return Object.keys(step.choices ?? {}).map((c) => CHOICE_LABELS[c]?.[lang] ?? c.replace(/_/g, " "));
+}
+
+/** Map an answer onto exactly one of a step's choices. Ambiguity returns null and the question is asked again. */
+export function parseChoice(step: Step, text: string): Record<string, SignValue> | null {
+  const options = Object.keys(step.choices ?? {});
+  let hits = options.filter((o) => CHOICE_WORDS[o]?.test(text));
+  // The more specific answer wins: "very slowly" contains "slow"; "could not measure" names no colour.
+  if (hits.includes("very_slow")) hits = hits.filter((h) => h !== "slow");
+  if (hits.includes("not_measured")) hits = ["not_measured"];
+  return hits.length === 1 ? step.choices![hits[0]] : null;
+}
+
+/** Parse the answer to one step. Returns the sign values, or null if the answer did not settle the step. */
+export function parseStepAnswer(step: Step, text: string): Signs | null {
+  if (step.kind === "count") {
+    const n = parseNumber(text);
+    const [min, max] = step.range ?? [1, 150];
+    return n != null && n >= min && n <= max ? { [step.signs[0]]: n } : null;
+  }
+  if (step.kind === "choice") return parseChoice(step, text);
+  if (step.kind === "days") {
+    const d = parseDays(text);
+    return d != null ? { [step.signs[0]]: d } : null;
+  }
+  const yn = parseYesNo(text);
+  if (yn == null) return null;
+  return { [step.signs[0]]: step.positiveWhen === "no" ? !yn : yn };
+}
+
+// ---------------------------------------------------------------------------
+// When to enter the pathway
+// ---------------------------------------------------------------------------
+
+const CHILD_RE = /(baccha|bachcha|bacche|bachche|bacchi|bachchi|beta\b|beti\b|child|baby|infant|toddler|mahine ka|mahine ki|saal ka|saal ki|months old|years? old|बच्चा|बच्चे|बच्ची|शिशु)/i;
+
+// Whole-utterance only: "bas do din se" is an answer, not a request to stop.
+export const STOP_RE = /^\s*(stop|end assessment|bas karo|band karo|khatam karo|बस करो|खत्म करो)\s*[.!।]?\s*$/i;
+export const SKIP_RE = /(pata nahi|nahi pata|don'?t know|not sure|skip|chhodo|maloom nahi)|पता नहीं/i;
+
+const AGE_WORDS: Record<string, number> = { ...NUMBER_WORDS, dedh: 1.5, dhai: 2.5, "डेढ़": 1.5, "ढाई": 2.5 };
+const MONTHS_RE = /(\d+(?:\.\d+)?|[a-zऀ-ॿ]+)\s*(?:months?|mahine|mahina|महीने|महीना)/i;
+const YEARS_RE = /(\d+(?:\.\d+)?|[a-zऀ-ॿ]+)\s*(?:years?|saal|varsh|साल|वर्ष)/i;
+
+/** "8 mahine", "2 saal", "dedh saal" -> months. A stated month count wins over years. A bare number is months. */
+export function parseAgeMonths(text: string): number | null {
+  const value = (m: RegExpMatchArray | null) => (m ? (/^\d/.test(m[1]) ? Number(m[1]) : AGE_WORDS[m[1].toLowerCase()]) : undefined);
+  const months = value(text.match(MONTHS_RE));
+  if (months != null) return Math.round(months);
+  const years = value(text.match(YEARS_RE));
+  if (years != null) return Math.round(years * 12);
+  const n = parseNumber(text);
+  return n == null ? null : Math.round(n);
+}
+
+export type Entry = "enter" | "ask_age" | "skip";
+
+/**
+ * After the visit is logged: enter the pathway for a sick child aged 2 months to 5 years.
+ * "Sick" means a symptom or a fever was recorded. A child with an unknown age is asked once.
+ */
+export function triageEntry(opts: { transcript: string; symptoms: string[]; tempC: number | null; ageMonths: number | null }): Entry {
+  const sick = opts.symptoms.length > 0 || (opts.tempC != null && opts.tempC >= 37.5);
+  if (!sick) return "skip";
+  if (opts.ageMonths != null) return opts.ageMonths >= AGE_MIN_MONTHS && opts.ageMonths < AGE_MAX_MONTHS ? "enter" : "skip";
+  return CHILD_RE.test(opts.transcript) ? "ask_age" : "skip";
+}

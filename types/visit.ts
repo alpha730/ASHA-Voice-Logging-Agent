@@ -30,6 +30,7 @@ export interface Visit extends ExtractedVisit {
   language: string | null;
   raw_transcript: string;
   status: VisitStatus;
+  imnci_triage?: Record<string, unknown> | null; // IMNCI sick-child classification, with the signs that produced it
   created_at: string;
 }
 

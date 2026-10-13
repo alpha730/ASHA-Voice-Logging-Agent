@@ -3,9 +3,12 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { ExtractResponse } from "@/app/api/extract/route";
 import type { VisitStartResponse } from "@/app/api/visit-start/route";
+import type { TriageResponse, TriageState } from "@/app/api/triage/route";
+import { TriageCard } from "./TriageCard";
 import type { UiLang } from "@/lib/agent";
 import { emptyVisit, missingFields, type ExtractedVisit, type RequiredField } from "@/types/visit";
 import type { DueItem, Patient, VisitProtocol } from "@/types/patient";
+import { pickVoice, splitBySpeechLang } from "@/lib/speech";
 
 type Phase = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
 type AgentLine = { text: string; kind: "question" | "summary" | "info" | "warn" };
@@ -54,6 +57,8 @@ export default function RecordPage() {
   const [due, setDue] = useState<DueItem[]>([]);
   const [protocol, setProtocol] = useState<{ id: VisitProtocol; label: string } | null>(null);
   const [protocolData, setProtocolData] = useState<Record<string, unknown>>({});
+  // IMNCI sick child assessment, run after the visit is logged.
+  const [triage, setTriage] = useState<TriageResponse | null>(null);
 
   // Refs mirror state that async callbacks (WebSocket, TTS) need without stale closures.
   const s = useRef({
@@ -71,6 +76,9 @@ export default function RecordPage() {
     protocolData: {} as Record<string, unknown>,
     protocolExpecting: null as string | null,
     patientId: null as string | null,
+    childDob: null as string | null,
+    triage: null as TriageState | null,
+    triageStarted: false,
   });
   const ws = useRef<WebSocket | null>(null);
   const audio = useRef<{ ctx: AudioContext; stream: MediaStream; node: AudioWorkletNode } | null>(null);
@@ -93,11 +101,10 @@ export default function RecordPage() {
   const speak = useCallback((text: string) => {
     return new Promise<void>((resolve) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window)) return resolve();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = s.current.lang === "hi" ? "hi-IN" : "en-IN";
-      const voice = speechSynthesis.getVoices().find((v) => v.lang === u.lang);
-      if (voice) u.voice = voice;
-      u.rate = 1;
+      // One utterance per script run, so Hindi text gets a Hindi voice and Latin text an
+      // English (India) voice. A Hindi voice reading Latin text spells it out letter by letter.
+      const chunks = splitBySpeechLang(text);
+      if (!chunks.length) return resolve();
       s.current.speaking = true; // mute mic chunks so the agent doesn't transcribe itself
       setPhase((p) => (p === "idle" ? p : "speaking"));
       const done = () => {
@@ -105,10 +112,19 @@ export default function RecordPage() {
         setPhase((p) => (p === "speaking" ? (ws.current ? "listening" : "idle") : p));
         resolve();
       };
-      u.onend = done;
-      u.onerror = done;
       speechSynthesis.cancel();
-      speechSynthesis.speak(u);
+      chunks.forEach((c, i) => {
+        const u = new SpeechSynthesisUtterance(c.text);
+        u.lang = c.lang;
+        const voice = pickVoice(c.lang);
+        if (voice) u.voice = voice;
+        u.rate = 1;
+        if (i === chunks.length - 1) {
+          u.onend = done;
+          u.onerror = done;
+        }
+        speechSynthesis.speak(u);
+      });
     });
   }, []);
 
@@ -131,15 +147,72 @@ export default function RecordPage() {
     setSavedId(data.visit.id);
     if (data.patient) {
       s.current.patientId = data.patient.id;
+      s.current.childDob ??= data.patient.date_of_birth ?? null;
       setPatient(data.patient);
       setPatientKnown(true);
     }
   }, []);
 
+  /** Show and speak one triage step. Inactive means this visit does not enter the IMNCI pathway. */
+  const applyTriage = useCallback(
+    async (data: TriageResponse) => {
+      s.current.triage = data.active ? data.state : null;
+      setTriage(data.active ? data : null);
+      setPhase(ws.current ? "listening" : "idle");
+      if (data.question) await speak(data.question);
+      else if (data.say) await speak(data.say);
+    },
+    [speak],
+  );
+
+  const triageRequest = useCallback(
+    async (body: Record<string, unknown>) => {
+      setPhase("thinking");
+      try {
+        const res = await fetch("/api/triage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, lang: s.current.lang, visitId: s.current.savedId }),
+        });
+        const data = (await res.json()) as TriageResponse & { error?: string };
+        if (!res.ok) throw new Error(data.error ?? "Assessment failed");
+        await applyTriage(data);
+      } catch (err) {
+        setError((err as Error).message);
+        setPhase(ws.current ? "listening" : "idle");
+      }
+    },
+    [applyTriage],
+  );
+
+  /** After the visit is logged: a sick child aged 2 months to 5 years enters the IMNCI assessment. */
+  const startTriage = useCallback(
+    async (v: ExtractedVisit) => {
+      if (s.current.triageStarted) return;
+      s.current.triageStarted = true;
+      await triageRequest({
+        action: "start",
+        transcript: s.current.turns.join("\n"),
+        symptoms: v.symptoms,
+        tempC: typeof v.vitals.temp_c === "number" ? v.vitals.temp_c : null,
+        dateOfBirth: s.current.childDob,
+        today: today(),
+      });
+    },
+    [triageRequest],
+  );
+
+  const triageTurn = useCallback(
+    (turn: string) => triageRequest({ action: "turn", state: s.current.triage, turn }),
+    [triageRequest],
+  );
+
   const handleTurn = useCallback(
     async (text: string, sttLanguage?: string | null) => {
       const turn = text.trim();
       if (!turn) return;
+      // While the IMNCI assessment is running, answers go to it and stay out of the visit transcript.
+      if (s.current.triage && s.current.triage.stage !== "done") return triageTurn(turn);
       s.current.turns = [...s.current.turns, turn];
       setTurns(s.current.turns);
       const lang = detectLanguage(s.current.turns.join(" "), sttLanguage);
@@ -178,12 +251,14 @@ export default function RecordPage() {
         setReopened(data.reopened);
         setProtocolData(data.protocolData);
         if (data.protocol && data.protocolLabel) setProtocol({ id: data.protocol, label: data.protocolLabel });
+        if (typeof data.protocolData.date_of_birth === "string") s.current.childDob ??= data.protocolData.date_of_birth;
 
         if (data.complete && data.summary) {
           await save(data.visit);
           setAgent((a) => [...a, { text: data.summary!, kind: "summary" }]);
           setPhase(ws.current ? "listening" : "idle");
           await speak(data.summary);
+          await startTriage(data.visit);
         } else if (data.question) {
           setAgent((a) => [...a, { text: data.question!, kind: data.reopened ? "warn" : "question" }]);
           setPhase(ws.current ? "listening" : "idle");
@@ -196,7 +271,7 @@ export default function RecordPage() {
         setPhase(ws.current ? "listening" : "idle");
       }
     },
-    [save, speak],
+    [save, speak, startTriage, triageTurn],
   );
 
   // Serialize turns so a fast second utterance never races the first extraction.
@@ -292,7 +367,11 @@ export default function RecordPage() {
       protocolData: {},
       protocolExpecting: null,
       patientId: null,
+      childDob: null,
+      triage: null,
+      triageStarted: false,
     };
+    setTriage(null);
     setProtocol(null);
     setProtocolData({});
     setPatient(null);
@@ -324,6 +403,7 @@ export default function RecordPage() {
       setPatientKnown(data.known);
       setDue(data.due);
       s.current.patientId = data.patient?.id ?? null;
+      s.current.childDob = data.patient?.date_of_birth ?? null;
       if (data.say) {
         setAgent((a) => [...a, { text: data.say!, kind: "info" }]);
         await speak(data.say);
@@ -354,7 +434,7 @@ export default function RecordPage() {
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <h1>Record a home visit</h1>
-          <p className="muted small">Speak naturally in Hindi, English, or both. Say “that’s wrong” / “galat hai” to fix the last answer.</p>
+          <p className="muted small">Speak naturally in Hindi, English, or both. Say “that’s wrong” / “गलत है” to fix the last answer.</p>
         </div>
         <div className="row">
           <span className="small muted">Agent speaks</span>
@@ -491,6 +571,8 @@ export default function RecordPage() {
           )}
         </section>
       </div>
+
+      {triage && <TriageCard triage={triage} onEnd={() => enqueueTurn("stop")} />}
     </div>
   );
 }
