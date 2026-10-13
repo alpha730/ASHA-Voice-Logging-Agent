@@ -14,6 +14,7 @@ import { createMicController, MIC_MODES, type MicController, type MicMode, type 
 import { LANG_LABELS, LANGS } from "@/lib/i18n";
 import { browserStore, readSetting, SETTING_KEYS, writeSetting } from "@/lib/settings";
 import { t } from "@/lib/text";
+import { formFromVisit, visitFromForm, type VisitForm } from "@/lib/visitEdit";
 
 type Phase = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
 type AgentLine = { text: string; kind: "question" | "summary" | "info" | "warn" };
@@ -100,6 +101,10 @@ export default function RecordPage() {
   const [micMode, setMicMode] = useState<MicMode>("hold");
   const [micState, setMicState] = useState<MicState>("idle");
   const [micHint, setMicHint] = useState<"too_short" | null>(null);
+  // Hand edits to the structured record.
+  const [editing, setEditing] = useState<VisitForm | null>(null);
+  const [editErrors, setEditErrors] = useState<string[]>([]);
+  const [editSaving, setEditSaving] = useState(false);
 
   // Settings remembered on this device.
   useEffect(() => {
@@ -572,6 +577,31 @@ export default function RecordPage() {
     }
   };
 
+  /** Apply the edited record. A visit already saved is updated in place, the same way the agent saves it. */
+  const saveEdit = async () => {
+    if (!editing) return;
+    const { visit: next, errors } = visitFromForm(editing, s.current.visit);
+    setEditErrors(errors);
+    if (errors.length) return;
+    if (s.current.savedId) {
+      setEditSaving(true);
+      try {
+        await save(next);
+      } catch (err) {
+        setEditErrors([`Not saved: ${(err as Error).message}`]);
+        return;
+      } finally {
+        setEditSaving(false);
+      }
+    }
+    s.current.visit = next;
+    setVisit(next);
+    setReopened(null);
+    setEditing(null);
+  };
+  const setField = (key: keyof VisitForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setEditing((f) => (f ? { ...f, [key]: e.target.value } : f));
+
   const submitTyped = () => {
     if (!typed.trim()) return;
     enqueueTurn(typed);
@@ -698,7 +728,69 @@ export default function RecordPage() {
         </section>
 
         <section className="card">
-          <h2>Structured record</h2>
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <h2 style={{ margin: 0 }}>Structured record</h2>
+            {!editing && (
+              <button
+                onClick={() => {
+                  setEditErrors([]);
+                  setEditing(formFromVisit(s.current.visit));
+                }}
+              >
+                Edit
+              </button>
+            )}
+          </div>
+          {editing ? (
+            <form
+              className="record-edit"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveEdit();
+              }}
+            >
+              <dl className="fields">
+                <dt><label htmlFor="ed-worker">{FIELD_LABELS.worker_name}</label></dt>
+                <dd><input id="ed-worker" type="text" value={editing.worker_name} onChange={setField("worker_name")} /></dd>
+                <dt><label htmlFor="ed-household">{FIELD_LABELS.household_id}</label></dt>
+                <dd><input id="ed-household" type="text" value={editing.household_id} onChange={setField("household_id")} /></dd>
+                <dt><label htmlFor="ed-patient">Patient</label></dt>
+                <dd><input id="ed-patient" type="text" value={editing.patient_name} onChange={setField("patient_name")} /></dd>
+                <dt><label htmlFor="ed-date">Visit date</label></dt>
+                <dd><input id="ed-date" type="date" value={editing.visit_date} onChange={setField("visit_date")} /></dd>
+                <dt><label htmlFor="ed-symptoms">Symptoms</label></dt>
+                <dd><input id="ed-symptoms" type="text" value={editing.symptoms} onChange={setField("symptoms")} placeholder="fever, cough" /></dd>
+                <dt>Vitals</dt>
+                <dd className="record-edit-vitals">
+                  <label>Temp °C <input type="text" inputMode="decimal" value={editing.temp_c} onChange={setField("temp_c")} /></label>
+                  <label>BP <input type="text" value={editing.bp} onChange={setField("bp")} placeholder="120/80" /></label>
+                  <label>Pulse <input type="text" inputMode="numeric" value={editing.pulse} onChange={setField("pulse")} /></label>
+                  <label>Weight kg <input type="text" inputMode="decimal" value={editing.weight_kg} onChange={setField("weight_kg")} /></label>
+                  <label>SpO2 % <input type="text" inputMode="numeric" value={editing.spo2} onChange={setField("spo2")} /></label>
+                </dd>
+                <dt><label htmlFor="ed-vacc">Vaccination</label></dt>
+                <dd><input id="ed-vacc" type="text" value={editing.vaccination_status} onChange={setField("vaccination_status")} /></dd>
+                <dt><label htmlFor="ed-followup">{FIELD_LABELS.follow_up_date}</label></dt>
+                <dd><input id="ed-followup" type="date" value={editing.follow_up_date} onChange={setField("follow_up_date")} /></dd>
+              </dl>
+              {editErrors.length > 0 && (
+                <ul className="small missing" role="alert">
+                  {editErrors.map((err) => (
+                    <li key={err}>{err}</li>
+                  ))}
+                </ul>
+              )}
+              <div className="row">
+                <button type="submit" className="primary" disabled={editSaving}>
+                  {editSaving ? "Saving…" : "Save changes"}
+                </button>
+                <button type="button" onClick={() => setEditing(null)} disabled={editSaving}>
+                  Cancel
+                </button>
+                <span className="small muted">{savedId ? "Updates the saved visit." : "Updates the record in progress."}</span>
+              </div>
+            </form>
+          ) : (
           <dl className="fields">
             <dt>{FIELD_LABELS.worker_name}</dt>
             <dd>{show("worker_name", visit.worker_name)}</dd>
@@ -717,6 +809,7 @@ export default function RecordPage() {
             <dt>{FIELD_LABELS.follow_up_date}</dt>
             <dd>{show("follow_up_date", visit.follow_up_date)}</dd>
           </dl>
+          )}
           {protocol && Object.keys(protocolData).length > 0 && (
             <>
               <h2 style={{ marginTop: 18 }}>{protocol.label} fields</h2>

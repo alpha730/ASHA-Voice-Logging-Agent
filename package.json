@@ -11,7 +11,7 @@
     "review:apply": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/apply-review.ts",
     "marwari:todo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/marwari-todo.ts",
     "marwari:apply": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/apply-marwari.ts",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/imnci/rules.test.ts lib/imnci/counselling.test.ts lib/llm.test.ts lib/imnci/review.test.ts lib/imnci/unknown.test.ts lib/marwari.test.ts lib/holdToTalk.test.ts"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/imnci/rules.test.ts lib/imnci/counselling.test.ts lib/llm.test.ts lib/imnci/review.test.ts lib/imnci/unknown.test.ts lib/marwari.test.ts lib/holdToTalk.test.ts lib/visitEdit.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
