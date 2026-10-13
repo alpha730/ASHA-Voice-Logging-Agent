@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { TriageResponse } from "@/app/api/triage/route";
+import { COUNSELLING } from "@/lib/imnci/advice";
+import { adviceFor, adviceSpeech, entryVerification } from "@/lib/imnci/counselling";
 import type { Outcome, Verification } from "@/lib/imnci/rules";
 
 const OUTCOME: Record<Outcome, { label: string; band: string }> = {
@@ -22,12 +25,34 @@ const VERIFICATION_NOTE: Record<Verification, string | null> = {
 };
 
 /** IMNCI sick child assessment: the question in progress, then the classification and what the ASHA does. */
-export function TriageCard({ triage, onEnd }: { triage: TriageResponse; onEnd: () => void }) {
+export function TriageCard({
+  triage,
+  onEnd,
+  lang,
+  onSpeak,
+}: {
+  triage: TriageResponse;
+  onEnd: () => void;
+  lang: "en" | "hi";
+  onSpeak: (text: string) => Promise<void>; // the page's speak(): mutes the mic while talking
+}) {
   const { state, result, question } = triage;
+  const [reading, setReading] = useState(false);
   const done = state?.stage === "done";
   const outcome = result ? OUTCOME[result.outcome] : null;
   const note = done && result ? VERIFICATION_NOTE[result.verification] : null;
   const source = `${triage.protocol.title}${triage.protocol.edition ? ` (${triage.protocol.edition})` : ""}`;
+  const advice = done && result ? adviceFor(COUNSELLING, result.classifications, result.ageMonths) : [];
+  const adviceNote = advice.some((e) => entryVerification(e) === "draft") ? VERIFICATION_NOTE.draft : null;
+  const docOf = (key: keyof typeof COUNSELLING.sources) => `${COUNSELLING.sources[key].title} (${COUNSELLING.sources[key].edition})`;
+  const readAloud = async () => {
+    setReading(true);
+    try {
+      await onSpeak(adviceSpeech(advice, lang));
+    } finally {
+      setReading(false);
+    }
+  };
 
   return (
     <section className="card triage">
@@ -76,6 +101,31 @@ export function TriageCard({ triage, onEnd }: { triage: TriageResponse; onEnd: (
               </p>
             </article>
           ))}
+          {advice.length > 0 && (
+            <section className="advice">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <h3 style={{ margin: 0 }}>{lang === "hi" ? "माँ को क्या बताएँ" : "What to tell the mother"}</h3>
+                <button onClick={readAloud} disabled={reading}>
+                  {reading ? (lang === "hi" ? "पढ़ रहे हैं…" : "Reading…") : lang === "hi" ? "पढ़कर सुनाइए" : "Read aloud"}
+                </button>
+              </div>
+              {adviceNote && <div className="agent-msg warn small">{adviceNote}</div>}
+              {advice.map((e) => (
+                <article key={e.id} className={`advice-entry${e.priority === "urgent" ? " urgent" : ""}`}>
+                  <strong>{lang === "hi" ? e.title_hi : e.title_en}</strong>
+                  <ul>
+                    {(lang === "hi" ? e.steps_hi : e.steps_en).map((step, i) => (
+                      <li key={i}>{step}</li>
+                    ))}
+                  </ul>
+                  <p className="small muted">
+                    Source: {e.verified ? `${docOf(e.source)}, page ${e.source_page}` : e.source_page ?? "none"}
+                    {!e.verified && " · not in the current booklet, not verified"}
+                  </p>
+                </article>
+              ))}
+            </section>
+          )}
           {result.pending.length > 0 && (
             <p className="small missing">
               Not assessed: {result.pending.map((p) => p.signs.map(labelOf).join(", ")).join("; ")}

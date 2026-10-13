@@ -580,7 +580,7 @@ export default function RecordPage() {
         </section>
       </div>
 
-      {triage && <TriageCard triage={triage} onEnd={() => enqueueTurn("stop")} />}
+      {triage && <TriageCard triage={triage} onEnd={() => enqueueTurn("stop")} lang={lang} onSpeak={speak} />}
     </div>
   );
 }

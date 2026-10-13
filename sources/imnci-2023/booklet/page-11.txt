@@ -1,0 +1,107 @@
+11
+THEN CHECK FOR MALNUTRITION
+LOOK AND FEEL: 
+Ÿ Measure weight, length/height, plot WFL on MCP card 
+and determine WFL SD score (color)*
+Ÿ Look for oedema of both feet
+Ÿ Measure MUAC, if child is 6 months or older
+LOOK:
+Ÿ Look for palmar pallor. Is it: 
+Ø Severe palmar pallor?
+Ø Some palmar pallor?
+Classify
+NUTRITIONAL STATUS
+Classify
+ANEMIA
+Ÿ WFL <-3 SD  score (red color on MCP 
+card)* and/or
+Ÿ MUAC <11.5 cm and/or         
+Ÿ Oedema of both feet 
+SEVERE ACUTE
+MALNUTRITION 
+Ÿ Give ﬁrst dose of oral amoxycillin and IM 
+gentamicin 
+Ÿ Treat the child to prevent low blood sugar.
+#
+Ÿ Refer URGENTLY to hospital 
+Ÿ Keep the child warm on the way to hospital.  
+MODERATE ACUTE
+MALNUTRITION 
+Ÿ Assess feeding and counsel the mother on how to 
+feed the child  
+Ÿ Advise mother when to return immediately 
+Ÿ Follow-up after 30 days
+Ÿ WFL  ≥ -2SD  score and
+Ÿ MUAC ≥ 12.5 cm and 
+Ÿ No Oedema of both feet
+  NO ACUTE
+MALNUTRITION 
+Ÿ If child is less than 2 years old, assess the child's 
+feeding and counsel the mother on feeding 
+according to the FOOD box on the COUNSEL THE 
+MOTHER chart.
+Ÿ If feeding problem, follow-up in 5 days.
+Ÿ Advise mother when to return immediately.
+Ÿ WFL <-2 SD score  
+(yellow color on MCP card) and/or                                     
+Ÿ MUAC 11.5–12.4 cm and
+Ÿ No Oedema of both feet
+THEN CHECK FOR ANEMIA
+* Look for visible severe wasting if  unable to measure length/height . 
+Classify severe acute malnutrition in presence of visible severe wasting.
+ #  If referral is not possible, see the section Where Referral Is Not Possible 
+Ÿ Severe palmar pallor       
+SEVERE ANEMIA
+Ÿ Refer URGENTLY to hospital 
+ANEMIA
+Ÿ Give iron folic acid  therapy for 14 days
+Ÿ Assess the child`s feeding and counsel the mother 
+on feeding. If feeding problem, follow-up after 5 
+days.
+Ÿ Follow-up  after 14 days. 
+Ÿ Some palmar pallor 
+Ÿ No palmar pallor 
+NO ANEMIA 
+Ÿ Give prophylactic iron folic acid if child 6 months or 
+older.
+THEN CHECK THE CHILD'S IMMUNIZATION*, PROPHYLACTIC VITAMIN A & IRON-FOLIC ACID SUPPLEMENTATION STATUS
+PROPHYLACTIC  IFA/ DEWORMING/ Prophylactic Vitamin A
+Ÿ Give   IFA syrup  (1ml 2 times a week with auto dispenser)  containing 20 mg of elemental  iron + 100 mcg 
+of folic acid  after the child has recovered from acute illness if the child is 6 months of age  or older, 
+supplement  IFA in LBW after 6 weeks of age 
+Ÿ Give anthelminthic if child is one year or older and has not received deworming agents in last 6 months (1-
+2 years 1/2 tablet albendazole and for 2 years above, 1 tablet).
+Ÿ Give Vitamin A supplementation as per state guidelines 
+*  A child who needs to be immunized should be advised to go for immunization the day vaccines  are available at AW/SC/PHC  
+#  JE in States where it is  included in their immunization schedule
+ASSESS OTHER PROBLEMS
+ ASSESS FEEDING IF AGE IS LESS THAN  2 YEARS /  HAS  UNCOMPLICATED SEVERE / MODERATE ACUTE MALNUTRITION  OR ANEMIA
+ASSESS  THE  MOTHER/CAREGIVER’S   DEVELOPMENT SUPPORTIVE PRACTICES IF  AGE IS LESS THAN  3 YEARS /  HAS  UNCOMPLICATED SEVERE ACUTE MALNUTRITION  OR ANEMIA
+COUNSEL THE MOTHER ABOUT HER OWN HEALTH
+IMMUNIZATION 
+SCHEDULE:
+AGE 
+At Birth
+6 weeks
+10 weeks
+14 weeks
+9-12 months 
+16-24 months
+60 months
+VACCINE 
+BCG  + OPV-0 + Hep B 0
+*
+OPV-1 +  Penta-1 +Rota Virus-1 + fIPV –1 + PCV –1
+*
+OPV-2+ Penta-2+ Rota Virus –2
+*
+OPV-3+ Penta-3 +fIPV-2 + RV V-3 + PCV-2
+#
+Measles-rubella (MR-1) + JE–1 + PCV booster + fIPV-3
+#
+MR-2, JE-2 , DPT booster-1,  OPV  booster
+DPT booster-2   
+SIGNS
+CLASSIFY AS
+IDENTIFY TREATMENT
+(Urgent pre-referral treatments are in bold print)
