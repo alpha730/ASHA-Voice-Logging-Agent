@@ -1,4 +1,4 @@
-import { llmConfigured, llmJson } from "@/lib/extraction";
+import { isLlmUnavailable, llmJson } from "@/lib/llm";
 import { classifyByKeywords, PROTOCOLS, protocolFields, protocolSchema } from "@/lib/protocols";
 import { addMonths } from "@/lib/schedule";
 import { VISIT_PROTOCOLS, type VisitProtocol } from "@/types/patient";
@@ -20,7 +20,12 @@ Rules:
 - general_illness when nothing else fits. Do not guess a specialised protocol from weak evidence.
 Return JSON: {"protocol": "<one of the ids above>"}`;
 
-  const raw = (await llmJson(system, `Transcript:\n"""${transcript}"""`)) as { protocol?: string } | null;
+  let raw: { protocol?: string } | null = null;
+  try {
+    raw = (await llmJson(system, `Transcript:\n"""${transcript}"""`)) as { protocol?: string } | null;
+  } catch (err) {
+    if (!isLlmUnavailable(err)) throw err; // model down: the keyword classification stands
+  }
   const picked = raw?.protocol as VisitProtocol | undefined;
   return picked && VISIT_PROTOCOLS.includes(picked) ? picked : keyword;
 }
@@ -30,16 +35,23 @@ export type ProtocolData = Record<string, unknown>;
 /**
  * Step two: extract only this protocol's fields from the latest utterance.
  * Same strict rule as the core extractor, nothing unsaid is ever filled in.
+ * `fromModel` is false when the keyword fallback produced the data (no model, or the model was down).
  */
+export interface ProtocolExtraction {
+  data: ProtocolData;
+  fromModel: boolean;
+  modelUnavailable: boolean;
+}
+
 export async function extractProtocolData(
   turn: string,
   today: string,
   protocol: VisitProtocol,
   current: ProtocolData,
   expecting: string | null,
-): Promise<ProtocolData> {
+): Promise<ProtocolExtraction> {
   const fields = protocolFields(protocol);
-  if (!fields.length) return {};
+  if (!fields.length) return { data: {}, fromModel: false, modelUnavailable: false };
 
   const system = `You extract one protocol's fields from a home-visit utterance spoken by an Indian community health worker.
 The utterance may be Hindi, English or code-switched, in Devanagari or romanized script.
@@ -61,9 +73,16 @@ Rules:
     .filter(Boolean)
     .join("\n\n");
 
-  const raw = (await llmJson(system, user)) as ProtocolData | null;
+  let raw: ProtocolData | null = null;
+  let modelUnavailable = false;
+  try {
+    raw = (await llmJson(system, user)) as ProtocolData | null;
+  } catch (err) {
+    if (!isLlmUnavailable(err)) throw err;
+    modelUnavailable = true;
+  }
   const parsed = raw ?? ruleBasedProtocolExtract(turn, today, protocol, expecting);
-  return coerce(parsed, protocol);
+  return { data: coerce(parsed, protocol), fromModel: raw != null, modelUnavailable };
 }
 
 /** Keep only known fields, with the declared type. Anything else is dropped. */
@@ -89,8 +108,8 @@ function coerce(raw: ProtocolData, protocol: VisitProtocol): ProtocolData {
  * The model is told to use null when a topic never came up; the keyword fallback cannot
  * make that distinction, so there [] only counts when the agent had just asked.
  */
-export function mergeProtocolData(prev: ProtocolData, next: ProtocolData, expecting: string | null): ProtocolData {
-  const trustEmpty = llmConfigured();
+export function mergeProtocolData(prev: ProtocolData, next: ProtocolData, expecting: string | null, fromModel: boolean): ProtocolData {
+  const trustEmpty = fromModel;
   const out = { ...prev };
   for (const [k, v] of Object.entries(next)) {
     if (Array.isArray(v) && v.length === 0 && !trustEmpty && k !== expecting) continue;

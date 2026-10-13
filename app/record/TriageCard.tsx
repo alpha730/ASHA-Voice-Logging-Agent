@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { TriageResponse } from "@/app/api/triage/route";
 import { COUNSELLING } from "@/lib/imnci/advice";
-import { adviceFor, adviceSpeech, entryVerification } from "@/lib/imnci/counselling";
+import { adviceFor, adviceSpeech, entryVerification, visibleSteps } from "@/lib/imnci/counselling";
 import type { Outcome, Verification } from "@/lib/imnci/rules";
 
 const OUTCOME: Record<Outcome, { label: string; band: string }> = {
@@ -114,10 +114,15 @@ export function TriageCard({
                 <article key={e.id} className={`advice-entry${e.priority === "urgent" ? " urgent" : ""}`}>
                   <strong>{lang === "hi" ? e.title_hi : e.title_en}</strong>
                   <ul>
-                    {(lang === "hi" ? e.steps_hi : e.steps_en).map((step, i) => (
+                    {visibleSteps(e, lang).map((step, i) => (
                       <li key={i}>{step}</li>
                     ))}
                   </ul>
+                  {(e.app_notes ?? []).map((n, i) => (
+                    <p key={i} className="app-note small">
+                      <strong>App note, not from the booklet:</strong> {lang === "hi" ? n.hi : n.en}
+                    </p>
+                  ))}
                   <p className="small muted">
                     Source: {e.verified ? `${docOf(e.source)}, page ${e.source_page}` : e.source_page ?? "none"}
                     {!e.verified && " · not in the current booklet, not verified"}

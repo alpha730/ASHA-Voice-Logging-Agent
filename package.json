@@ -8,7 +8,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "relay": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local scripts/stt-relay.ts",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/imnci/rules.test.ts lib/imnci/counselling.test.ts"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/imnci/rules.test.ts lib/imnci/counselling.test.ts lib/llm.test.ts lib/imnci/review.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

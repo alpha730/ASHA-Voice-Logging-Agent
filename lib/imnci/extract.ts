@@ -1,6 +1,6 @@
-import { llmConfigured, llmJson } from "@/lib/extraction";
-import { parseStepAnswer, type Step } from "@/lib/imnci/flow";
-import type { Signs } from "@/lib/imnci/rules";
+import { isLlmUnavailable, llmConfigured, llmJson } from "../llm.ts";
+import { parseStepAnswer, type Step } from "./flow.ts";
+import type { Signs } from "./rules.ts";
 
 /**
  * The only model call in the IMNCI pathway. It maps what the worker said onto the protocol's
@@ -55,13 +55,21 @@ function coerce(raw: unknown, steps: Step[]): Signs {
 /**
  * Signs stated in an utterance. With `expecting`, the utterance is her answer to that step:
  * a clear answer is parsed directly, and measurement steps never reach the model.
+ *
+ * When every model provider is down, only the direct parse is used and `modelUnavailable` is set,
+ * so the route can ask her to repeat. Nothing is ever filled in for her.
  */
-export async function extractSigns(text: string, steps: Step[], expecting: Step | null): Promise<Signs> {
+export async function extractSigns(
+  text: string,
+  steps: Step[],
+  expecting: Step | null,
+): Promise<{ signs: Signs; modelUnavailable: boolean }> {
   const direct = expecting ? parseStepAnswer(expecting, text) : null;
-  if (expecting?.measurement) return direct ?? {};
+  if (expecting?.measurement) return { signs: direct ?? {}, modelUnavailable: false };
 
   const offered = steps.filter((s) => !s.measurement);
   let fromModel: Signs = {};
+  let modelUnavailable = false;
   if (llmConfigured()) {
     const user = [expecting ? `She was just asked: "${expecting.prompt.en}"` : null, `She said:\n"""${text}"""`]
       .filter(Boolean)
@@ -69,10 +77,11 @@ export async function extractSigns(text: string, steps: Step[], expecting: Step 
     try {
       fromModel = coerce(await llmJson(systemPrompt(offered), user), offered);
     } catch (err) {
+      if (!isLlmUnavailable(err)) throw err;
       // A clear answer to the question just asked does not need the model, so an outage cannot stall the visit.
-      if (!direct) throw err;
+      modelUnavailable = true;
     }
   }
   // A clear direct answer to the question just asked beats the model's reading of it.
-  return { ...fromModel, ...(direct ?? {}) };
+  return { signs: { ...fromModel, ...(direct ?? {}) }, modelUnavailable };
 }

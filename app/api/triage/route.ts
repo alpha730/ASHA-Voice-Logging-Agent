@@ -7,6 +7,8 @@ import {
   ageFromText,
   choiceLabels,
   inAgeBand,
+  MODEL_BUSY_START,
+  modelBusyRepeat,
   nextStep,
   outOfRangeMessage,
   promptText,
@@ -145,16 +147,21 @@ async function advance(state: TriageState, lang: Lang, visitId: string | null): 
   return { ...base, active: true, state: done, result, question: null, say: closing(result, lang), saved, saveError };
 }
 
-/** Signs she already stated during the visit, so those questions are skipped. Measurements are never taken from here. */
-async function seed(state: TriageState): Promise<TriageState> {
-  const signs = await extractSigns(state.narrative, STEPS, null);
-  return { ...state, signs: { ...signs, ...state.signs } };
+/**
+ * Signs she already stated during the visit, so those questions are skipped. Measurements are never
+ * taken from here. If the model is down nothing is seeded, and every question is simply asked.
+ */
+async function seed(state: TriageState): Promise<{ state: TriageState; modelUnavailable: boolean }> {
+  const { signs, modelUnavailable } = await extractSigns(state.narrative, STEPS, null);
+  return { state: { ...state, signs: { ...signs, ...state.signs } }, modelUnavailable };
 }
 
 /** Run the assessment for a child whose age is now known, opening with the age line if it came from her sentence. */
 async function begin(state: TriageState, lang: Lang, visitId: string | null): Promise<TriageResponse> {
-  const res = await advance(await seed(state), lang, visitId);
-  return res.question ? { ...res, question: ageLine(state, lang) + res.question } : res;
+  const seeded = await seed(state);
+  const res = await advance(seeded.state, lang, visitId);
+  const busy = seeded.modelUnavailable ? MODEL_BUSY_START[lang] : "";
+  return res.question ? { ...res, question: busy + ageLine(state, lang) + res.question } : res;
 }
 
 export async function POST(req: Request) {
@@ -253,7 +260,7 @@ export async function POST(req: Request) {
       return NextResponse.json(await advance({ ...state, log, skipped: [...state.skipped, step.key], lastAnswered: step.key }, lang, visitId));
     }
 
-    const found = await extractSigns(turn, STEPS, step);
+    const { signs: found, modelUnavailable } = await extractSigns(turn, STEPS, step);
     const signs = { ...state.signs };
     for (const [k, v] of Object.entries(found)) {
       // Her answer to this question may correct it; anything else only fills a gap.
@@ -261,6 +268,11 @@ export async function POST(req: Request) {
     }
 
     if (step && step.signs.some((id) => signs[id] == null)) {
+      // The model was down and her answer needed it: ask again in a form read without a model.
+      // An outage is not her unclear answer, so it does not count toward skipping the step.
+      if (modelUnavailable) {
+        return NextResponse.json<TriageResponse>({ ...base, active: true, state: { ...state, signs, log }, result: evaluateTriage(signs, state.ageMonths), question: modelBusyRepeat(step, lang), say: null });
+      }
       if (state.attempts + 1 >= MAX_ATTEMPTS) {
         return NextResponse.json(await advance({ ...state, signs, log, skipped: [...state.skipped, step.key], lastAnswered: step.key, attempts: 0 }, lang, visitId));
       }

@@ -9,6 +9,7 @@ import {
   entryVerification,
   quotesOf,
   validateCounselling,
+  visibleSteps,
   type CounsellingEntry,
   type CounsellingFile,
   type SourceDoc,
@@ -263,4 +264,109 @@ test("read-aloud text is in one language per call", () => {
   assert.equal(/[A-Za-z]{4,}/.test(hi.replace(/ORS/g, "")), false);
   assert.match(en, /Go to the hospital now/);
   assert.equal(/[ऀ-ॿ]/.test(en), false);
+});
+
+// ---------------------------------------------------------------------------
+// Held text, app notes, cup sizes, open questions
+// ---------------------------------------------------------------------------
+
+const held = file.entries.flatMap((e) => (e.held_steps ?? []).map((h) => ({ entry: e.id, ...h })));
+
+test("the honey and home-remedy sentence is held, with a reason, and still matches its page", () => {
+  const honey = held.find((h) => h.entry === "cough_cold_home_care");
+  assert.ok(honey, "held step present");
+  assert.equal(honey.hold, true);
+  assert.match(honey.hold_reason, /needs clinician decision; honey under 1 year is commonly advised against/);
+  assert.match(honey.step_en, /honey/);
+  assert.ok(pageText("booklet", honey.source_page)!.includes(norm(honey.quote)));
+  // Everything else in the entry stays, including the separate "avoid cough syrups" sentence.
+  const cough = file.entries.find((e) => e.id === "cough_cold_home_care")!;
+  assert.ok(cough.steps_en.includes("Do not give cough syrups."));
+  assert.equal(cough.steps_en.length, 5);
+});
+
+test("held text is never shown on the card or read aloud, for any result or age", () => {
+  const card = readFileSync(new URL("app/record/TriageCard.tsx", root), "utf8");
+  assert.equal(card.includes("held_steps"), false, "the card never reads held_steps");
+  const banned = [...held.flatMap((h) => [h.step_en, h.step_hi]), "honey", "शहद"];
+  for (const id of classificationIds(protocol)) {
+    for (const age of [2, 7, 10, 18, 36, null]) {
+      const entries = adviceFor(file, one(id), age);
+      const shown = [
+        ...entries.flatMap((e) => [...visibleSteps(e, "en"), ...visibleSteps(e, "hi")]),
+        adviceSpeech(entries, "en"),
+        adviceSpeech(entries, "hi"),
+      ].join("\n");
+      for (const text of banned) assert.equal(shown.includes(text), false, `"${text}" shown for ${id} at ${age}`);
+    }
+  }
+});
+
+test("a held step needs hold: true and a reason", () => {
+  const f = clone();
+  f.entries.find((e) => e.id === "cough_cold_home_care")!.held_steps![0].hold_reason = "";
+  assert.throws(() => validateCounselling(f, protocol), /hold_reason/);
+});
+
+test("the ORS packet note is an app note: labelled, not read aloud, never verified", () => {
+  const ors = file.entries.find((e) => e.id === "how_to_make_ors")!;
+  assert.deepEqual(ors.app_notes!.map((n) => n.en), ["Use the amount of water printed on the ORS packet."]);
+  // The quoted source steps are kept as they were.
+  assert.ok(ors.steps_en.some((s) => s.includes("1 litre (1000 ml)")));
+  const card = readFileSync(new URL("app/record/TriageCard.tsx", root), "utf8");
+  assert.ok(card.includes("App note, not from the booklet"));
+  const speech = adviceSpeech([ors], "en") + adviceSpeech([ors], "hi");
+  for (const n of ors.app_notes!) assert.equal(speech.includes(n.en) || speech.includes(n.hi), false);
+  // Its presence does not change how the entry was checked, and quotesOf never includes it.
+  assert.equal(entryVerification(ors), "ai-compared");
+  assert.equal(quotesOf(ors).some((q) => q.quote.includes("printed on the ORS packet")), false);
+  // An app note cannot carry a verification of its own.
+  const f = clone();
+  (f.entries.find((e) => e.id === "how_to_make_ors")!.app_notes![0] as unknown as Record<string, unknown>).verified = true;
+  assert.throws(() => validateCounselling(f, protocol), /app note has only en and hi/);
+});
+
+/** "cup" or "कप" as a word: not the start of कपड़ा (cloth). */
+const CUP = /\b(cups?)\b|कप(?![\u0900-\u097F])/g;
+/** A cup is an amount when a number, fraction or amount word comes just before it. */
+const AMOUNT_BEFORE = /([\d¼½¾]|half|quarter|आधा|चौथाई|पौना)\s*$/i;
+/** ...and then it must be followed by its millilitres. */
+const ML_AFTER = /^\s*(\((about |लगभग )?\d+([–-]\d+)? ?ml\)|= ?\d+ ?ml)/;
+/** Cups that are the vessel, not an amount. Each one is listed, so a new one has to be looked at. */
+const VESSEL = ["from a cup.", "ORS कप से"];
+
+test("every cup amount shows millilitres beside it, in English and Hindi", () => {
+  const problems: string[] = [];
+  for (const e of file.entries) {
+    const texts = [...e.steps_en, ...e.steps_hi, ...(e.app_notes ?? []).flatMap((n) => [n.en, n.hi])];
+    for (const t of texts) {
+      for (const m of t.matchAll(CUP)) {
+        const before = t.slice(Math.max(0, m.index! - 12), m.index!);
+        const after = t.slice(m.index! + m[0].length);
+        const amount = AMOUNT_BEFORE.test(before) || /^\s*\(/.test(after);
+        if (amount && !ML_AFTER.test(after)) problems.push(`${e.id}: "${t.slice(Math.max(0, m.index! - 15), m.index! + 25)}"`);
+        if (!amount && !VESSEL.some((v) => t.includes(v))) {
+          problems.push(`${e.id}: cup that is neither an amount with ml nor a listed vessel: "${t}"`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
+test("the cup check catches a cup amount without ml", () => {
+  const bad = "Give at least ½ cup at a time.";
+  const m = [...bad.matchAll(CUP)][0];
+  assert.ok(AMOUNT_BEFORE.test(bad.slice(0, m.index!)));
+  assert.equal(ML_AFTER.test(bad.slice(m.index! + m[0].length)), false);
+  assert.equal([..."मुलायम सूती कपड़े से".matchAll(CUP)].length, 0, "कपड़ा is cloth, not a cup");
+});
+
+test("the diarrhoea follow-up question (2 or 5 days) is recorded as an open question, and the advice gives no number", () => {
+  const fu = file.entries.find((e) => e.id === "follow_up_earliest_day")!;
+  assert.match(fu.open_question!, /2 days/);
+  assert.match(fu.open_question!, /5 days/);
+  assert.equal(/\d/.test(fu.steps_en.join(" ") + fu.steps_hi.join(" ")), false);
+  const some = [...protocol.assessments.flatMap((a) => (a.classification_groups ?? []).flatMap((g) => g.classifications))].find((c) => c.id === "some_dehydration");
+  assert.equal(some?.follow_up_days, 2, "the protocol keeps its value");
 });

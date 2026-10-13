@@ -122,6 +122,26 @@ textarea, input[type="text"] { font: inherit; width: 100%; padding: 8px; border:
 .advice-entry ul { margin: 4px 0; padding-left: 20px; }
 .advice-entry li { margin: 2px 0; }
 .advice-entry p { margin: 0; }
+.advice-entry .app-note { border-left: 3px dashed var(--muted); padding-left: 8px; margin: 4px 0; }
 .advice-entry.urgent { border-left: 6px solid var(--pink); padding-left: 10px; }
 .disclaimer { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; color: var(--muted); }
 .signs { columns: 2; margin: 6px 0; padding-left: 18px; }
+
+/* Clinician review (/review) */
+.review { display: grid; gap: 14px; }
+.review-head { display: grid; gap: 10px; }
+.review-who { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.review-who label { display: grid; gap: 4px; font-size: 0.9rem; }
+.review-who input { font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+.review-section { display: grid; gap: 10px; }
+.review-section h2 { margin: 12px 0 0; }
+.review-group { margin: 8px 0 6px; text-transform: capitalize; color: var(--muted); font-size: 1rem; }
+.review-item { display: grid; gap: 8px; margin-bottom: 10px; border-left: 6px solid var(--line); }
+.review-item.answered-correct { border-left-color: var(--green); }
+.review-item.answered-wrong { border-left-color: var(--danger); }
+.review-item.answered-needs_change { border-left-color: #eab308; }
+.review-does, .review-notes { margin: 0; padding-left: 18px; }
+.review-notes { color: var(--yellow); }
+.review-quote { margin: 6px 0; padding: 6px 10px; border-left: 3px solid var(--line); background: var(--bg); font-style: italic; overflow-wrap: anywhere; }
+.review-verdict { display: flex; flex-wrap: wrap; gap: 6px 16px; border: 0; padding: 0; margin: 0; }
+.review-comment { min-height: 2.5em; }

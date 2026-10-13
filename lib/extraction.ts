@@ -1,3 +1,4 @@
+import { isLlmUnavailable, llmConfigured, llmJson } from "@/lib/llm";
 import { emptyVisit, type ExtractedVisit, type RequiredField } from "@/types/visit";
 
 const SCHEMA_DESCRIPTION = `{
@@ -55,16 +56,21 @@ const RESPONSE_SCHEMA = {
 } as const;
 
 /**
- * Extraction entry point. Calls Gemini's generateContent when LLM_API_KEY and
- * LLM_MODEL are set; otherwise falls back to the rule-based extractor.
+ * Extraction entry point. Uses the language model when one is configured; otherwise, or when every
+ * configured provider is down, the rule-based extractor below. `modelUnavailable` tells the route
+ * to ask the worker to repeat anything the simple reader missed.
  */
 export interface ExtractContext {
   current: ExtractedVisit;
   expecting: RequiredField | null; // the field the agent just asked about, if any
 }
 
-export async function extractVisit(turn: string, today: string, ctx: ExtractContext): Promise<ExtractedVisit> {
-  if (!process.env.LLM_API_KEY || !process.env.LLM_MODEL) return ruleBasedExtract(turn, today, ctx.expecting);
+export async function extractVisit(
+  turn: string,
+  today: string,
+  ctx: ExtractContext,
+): Promise<{ visit: ExtractedVisit; modelUnavailable: boolean }> {
+  if (!llmConfigured()) return { visit: ruleBasedExtract(turn, today, ctx.expecting), modelUnavailable: false };
   const user = [
     `Record so far: ${JSON.stringify(ctx.current)}`,
     ctx.expecting ? `The agent just asked the worker about: ${ctx.expecting}` : null,
@@ -73,91 +79,11 @@ export async function extractVisit(turn: string, today: string, ctx: ExtractCont
   ]
     .filter(Boolean)
     .join("\n\n");
-  return normalize(parseJson(await callLlm(systemPrompt(today), user)));
-}
-
-/**
- * Two request shapes: Gemini's native generateContent, and the OpenAI-compatible
- * chat completions used by Groq, OpenAI, OpenRouter and most others. The base URL picks.
- */
-async function callLlm(system: string, user: string): Promise<string> {
-  const base = (process.env.LLM_BASE_URL ?? "https://api.groq.com/openai/v1").replace(/\/$/, "");
-  const model = process.env.LLM_MODEL!;
-  return base.includes("generativelanguage.googleapis.com")
-    ? callGemini(base, model, system, user)
-    : callOpenAiCompatible(base, model, system, user);
-}
-
-/**
- * Free API tiers rate-limit aggressively, and a demo should not die on a 429.
- * Retries honour the provider's stated wait, capped so a worker is never left hanging.
- */
-async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
-  for (let i = 0; ; i++) {
-    const res = await fetch(url, init);
-    if (res.ok || i >= attempts - 1 || (res.status !== 429 && res.status < 500)) return res;
-    const body = await res.clone().text();
-    const retryAfter = Number(res.headers.get("retry-after"));
-    const suggested = Number(body.match(/try again in ([\d.]+)s/)?.[1]);
-    const waitMs = Math.min(6000, ((retryAfter || suggested || 2 ** i) + 0.3) * 1000);
-    await new Promise((r) => setTimeout(r, waitMs));
-  }
-}
-
-async function callOpenAiCompatible(base: string, model: string, system: string, user: string): Promise<string> {
-  const res = await fetchWithRetry(`${base}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.LLM_API_KEY}` },
-    body: JSON.stringify({
-      model,
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error(`LLM request failed: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "{}";
-}
-
-async function callGemini(base: string, model: string, system: string, user: string): Promise<string> {
-  const res = await fetchWithRetry(`${base}/models/${model}:generateContent`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.LLM_API_KEY! },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: user }] }],
-      generationConfig: {
-        temperature: 0,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-        // Flash-lite models reason by default; disabling it keeps latency and token cost down.
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    }),
-  });
-  if (!res.ok) throw new Error(`LLM request failed: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-}
-
-export const llmConfigured = () => Boolean(process.env.LLM_API_KEY && process.env.LLM_MODEL);
-
-/** Generic strict-JSON call, used by the Phase 5 classify and protocol-extraction steps. */
-export async function llmJson(system: string, user: string): Promise<unknown | null> {
-  if (!llmConfigured()) return null;
-  return parseJson(await callLlm(system, user));
-}
-
-function parseJson(text: string): unknown {
-  const match = text.match(/\{[\s\S]*\}/);
   try {
-    return JSON.parse(match ? match[0] : text);
-  } catch {
-    return {};
+    return { visit: normalize(await llmJson(systemPrompt(today), user, RESPONSE_SCHEMA)), modelUnavailable: false };
+  } catch (err) {
+    if (!isLlmUnavailable(err)) throw err;
+    return { visit: ruleBasedExtract(turn, today, ctx.expecting), modelUnavailable: true };
   }
 }
 

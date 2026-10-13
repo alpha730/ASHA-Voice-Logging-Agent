@@ -17,7 +17,7 @@
     "verification": "Each classification carries verified and source_check. verified:true only with a real printed page and an exact quote from the 2023 health-worker booklet. Quotes are whitespace-normalised.",
     "source_check_methods": {
       "ai-compared-to-booklet": "Compared to the booklet by software (Claude), with page and quote. Not reviewed by a clinician.",
-      "clinician-reviewed": "Reviewed against the printed booklet by a named clinician. Set by hand only, with reviewer and date.",
+      "clinician-reviewed": "Reviewed against the printed booklet by a named clinician, with reviewer and date. Set only by hand or by scripts/apply-review.ts from that clinician's exported /review file.",
       "not-confirmed": "Not found in, or not readable from, the booklet. Has a reason."
     },
     "check_scope": "A source_check covers the signs, thresholds, colour band and follow_up_days of a row. asha_action and refer are ASHA-scope filters and are NOT checked against this booklet: its treatment column is written for health workers (ANMs), not ASHAs. Confirm them against the NHM ASHA drug kit list.",

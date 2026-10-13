@@ -246,7 +246,11 @@ export default function RecordPage() {
         });
         const data = (await res.json()) as ExtractResponse & { error?: string };
         if (!res.ok) throw new Error(data.error ?? "Extraction failed");
-        console.log("[extraction]", data);
+        // The model was down and only the rule-based reader ran: say so, so she repeats what was missed.
+        if (data.notice) {
+          setAgent((a) => [...a, { text: data.notice!, kind: "warn" }]);
+          await speak(data.notice);
+        }
 
         s.current.visit = data.visit;
         s.current.expecting = data.expecting;

@@ -23,6 +23,22 @@ export interface CounsellingCheck {
   supporting?: CounsellingQuote[];
 }
 
+/** Source text kept in the file but never shown or read aloud until a clinician decides. */
+export interface HeldStep {
+  step_en: string;
+  step_hi: string;
+  hold: true;
+  hold_reason: string;
+  source_page: number;
+  quote: string;
+}
+
+/** Written by the app, not taken from a source. Shown labelled as such, never counted as verified. */
+export interface AppNote {
+  en: string;
+  hi: string;
+}
+
 export interface CounsellingEntry {
   id: string;
   priority: "urgent" | "normal"; // urgent entries are shown first on a pink result
@@ -37,6 +53,9 @@ export interface CounsellingEntry {
   source_page: number | string | null;
   verified: boolean;
   source_check: CounsellingCheck;
+  held_steps?: HeldStep[];
+  app_notes?: AppNote[];
+  open_question?: string; // listed on the clinician review page
 }
 
 export interface CounsellingFile {
@@ -72,6 +91,18 @@ export function validateCounselling(file: CounsellingFile, protocol: ImnciProtoc
     if (!e.applies_to?.length) errors.push(`${where}: applies_to is empty`);
     for (const id of e.applies_to ?? []) if (!known.has(id)) errors.push(`${where}: applies_to "${id}" is not a classification in the protocol`);
 
+    for (const h of e.held_steps ?? []) {
+      if (h.hold !== true || !h.hold_reason?.trim()) errors.push(`${where}: a held step needs hold: true and a hold_reason`);
+      if (!h.step_en?.trim() || !DEVANAGARI.test(h.step_hi ?? "")) errors.push(`${where}: a held step needs step_en and a Devanagari step_hi`);
+      if (!Number.isInteger(h.source_page) || !h.quote?.trim()) errors.push(`${where}: a held step needs a numeric page and its quote`);
+    }
+    for (const n of e.app_notes ?? []) {
+      const extra = Object.keys(n).filter((k) => k !== "en" && k !== "hi");
+      if (extra.length) errors.push(`${where}: an app note has only en and hi, never ${extra.join(", ")}; it is not source text`);
+      if (!n.en?.trim() || !DEVANAGARI.test(n.hi ?? "")) errors.push(`${where}: an app note needs en and a Devanagari hi`);
+    }
+    if (e.open_question != null && !e.open_question.trim()) errors.push(`${where}: open_question is empty`);
+
     const check = e.source_check;
     if (check && !METHODS.includes(check.method)) errors.push(`${where}: unknown source_check method "${check.method}"`);
     if (e.verified !== true) {
@@ -97,11 +128,18 @@ export function validateCounselling(file: CounsellingFile, protocol: ImnciProtoc
 
 /** Every quote an entry relies on, with the document and page it must appear on. */
 export function quotesOf(e: CounsellingEntry): { source: SourceDoc; page: number; quote: string }[] {
-  if (!e.verified || !e.source_check.quote) return [];
+  const held = (e.held_steps ?? []).map((h) => ({ source: e.source, page: h.source_page, quote: h.quote }));
+  if (!e.verified || !e.source_check.quote) return held;
   return [
     { source: e.source, page: e.source_page as number, quote: e.source_check.quote },
     ...(e.source_check.supporting ?? []).map((s) => ({ source: s.source ?? e.source, page: s.source_page, quote: s.quote })),
+    ...held,
   ];
+}
+
+/** The steps shown and read aloud. Held steps are a separate field, so they never appear here. */
+export function visibleSteps(e: CounsellingEntry, lang: "en" | "hi"): string[] {
+  return lang === "hi" ? e.steps_hi : e.steps_en;
 }
 
 /**
@@ -124,15 +162,16 @@ export function adviceFor(
   return [...matched.filter((e) => e.priority === "urgent"), ...matched.filter((e) => e.priority !== "urgent")];
 }
 
-/** How far an entry was checked, in the same terms as the rules. */
+/** How far an entry was checked, in the same terms as the rules. App notes never count toward it. */
 export function entryVerification(e: CounsellingEntry): Verification {
   if (!e.verified || e.source_check.method === "not-confirmed") return "draft";
   return e.source_check.method === "clinician-reviewed" ? "clinician-reviewed" : "ai-compared";
 }
 
-/** The text to read aloud: each title, then its steps, in one language. */
+/**
+ * The text to read aloud: each title, then its source steps, in one language. Held steps and app
+ * notes are not read: what the mother hears is source text only. App notes stay on the card.
+ */
 export function adviceSpeech(entries: CounsellingEntry[], lang: "en" | "hi"): string {
-  return entries
-    .map((e) => (lang === "hi" ? `${e.title_hi}: ${e.steps_hi.join(" ")}` : `${e.title_en}: ${e.steps_en.join(" ")}`))
-    .join(" ");
+  return entries.map((e) => `${lang === "hi" ? e.title_hi : e.title_en}: ${visibleSteps(e, lang).join(" ")}`).join(" ");
 }

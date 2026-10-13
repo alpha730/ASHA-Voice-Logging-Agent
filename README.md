@@ -1,8 +1,9 @@
 # ASHA Voice Logging Agent
 
-A health worker speaks a home visit in Hindi, English, or a mix. AssemblyAI streams the transcript, an
-extraction agent turns it into a structured record, asks one clarifying question if a required field is
-missing, and the visit appears on a supervisor dashboard seconds later.
+A health worker speaks a home visit in Hindi, English, or a mix. Speech is transcribed live, an
+extraction agent turns it into a structured record and asks one clarifying question at a time, and the
+visit appears on a supervisor dashboard. For a sick child from 2 months up to 5 years, the app then
+runs the IMNCI sick-child assessment and shows what to tell the mother.
 
 ## Run it
 
@@ -10,96 +11,163 @@ missing, and the visit appears on a supervisor dashboard seconds later.
 npm install
 cp .env.example .env.local   # fill in what you have
 npm run dev                  # http://localhost:3000
+npm run relay                # only for live speech with Sarvam (the default), ws://localhost:8787
 ```
 
-Pages:
+Checks:
 
-| Route | Who it is for |
-| --- | --- |
-| `/record` | The health worker. Start visit, talk, answer the agent's question. |
-| `/dashboard` | Supervisors. Visits newest first, transcripts, follow-ups due, flagged vitals. |
-| `/patients` | The patient register, with what each person is due or overdue for. |
-| `/before-after` | The pitch slide: paper register beside the latest structured record. |
+```bash
+npm test                     # rule engine, advice, model resilience, clinician review
+npm run typecheck
+npm run build
+```
+
+Tests run on Node 24, which runs the `.ts` files directly.
 
 Nothing is required to see the loop run. With no keys at all, `/record` still works through the
 "type an utterance" box, extraction falls back to a rule-based parser, and visits are stored in
 `data/visits.json`.
 
+| Route | Who it is for |
+| --- | --- |
+| `/record` | The health worker. Start a visit, talk, answer the agent's questions, run the sick-child assessment. |
+| `/dashboard` | Supervisors. Visits newest first, transcripts, follow-ups due, flagged vitals. |
+| `/patients` | The patient register, with what each person is due or overdue for. |
+| `/before-after` | The pitch slide: paper register beside the latest structured record. |
+| `/review` | A clinician reviewing the IMNCI rules and advice. Not linked; 404 unless `REVIEW_ENABLED=true`. |
+
 ## Environment variables
 
-| Variable | Effect when unset |
-| --- | --- |
-| `ASSEMBLYAI_API_KEY` | Live mic streaming is disabled. Use the typed-utterance box instead. |
-| `ASSEMBLYAI_SPEECH_MODEL` | AssemblyAI's default streaming model is used. Set this to the Universal-3.5 Pro Streaming id, which is the tier that supports Hindi and code-switching. |
-| `ASSEMBLYAI_KEYTERMS` | No keyterm prompting. Comma-separated domain terms bias recognition toward village names, symptoms and vaccines. |
-| `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | Extraction and protocol classification use the rule-based fallback in [lib/extraction.ts](lib/extraction.ts). |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Visits and patients are written to `data/*.json` instead of Postgres. |
+Put them in `.env.local` locally, and in the Vercel (app) or Render (relay) settings when deployed.
+Never commit keys.
 
-The extraction client speaks two dialects, chosen by the base URL. A `generativelanguage.googleapis.com`
-URL uses Gemini's `generateContent` with a strict response schema; anything else uses OpenAI-compatible
-chat completions, which covers Groq, OpenAI and OpenRouter. Switching providers is an env edit, not a
-code change. Current setup is Groq.
-
-For Supabase, run [supabase/schema.sql](supabase/schema.sql) in the SQL editor, then set the two variables.
+| Variable | What it does | When unset |
+| --- | --- | --- |
+| `STT_PROVIDER` | `sarvam` (default) or `assemblyai`. | Sarvam. |
+| `SARVAM_API_KEY` | Sarvam key. Held by the relay; the browser never sees it. | No live speech with Sarvam; type instead. |
+| `STT_RELAY_URL` | Where the browser reaches the relay. `wss://` once the app is on https. | `ws://localhost:8787`. |
+| `SARVAM_MODEL`, `SARVAM_LANGUAGE_CODE`, `SARVAM_KEYTERMS` | Model, language (`hi-IN` or `auto`), and domain terms (`saaras:v4` only). | `saaras:v3-realtime`, `hi-IN`, none. |
+| `PORT` or `STT_RELAY_PORT` | Port the relay listens on (Render sets `PORT`). | 8787. |
+| `ASSEMBLYAI_API_KEY`, `ASSEMBLYAI_SPEECH_MODEL`, `ASSEMBLYAI_KEYTERMS` | Used only with `STT_PROVIDER=assemblyai`. | No AssemblyAI streaming. |
+| `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | The language model for extraction. The base URL picks the dialect: OpenAI-compatible (Groq by default) or Gemini's native API. | Rule-based extraction only. |
+| `LLM_FALLBACK_MODEL`, `LLM_FALLBACK_BASE_URL`, `LLM_FALLBACK_API_KEY` | A second model, tried after the primary fails. The model alone means the same provider and key; another provider needs its own URL and key. | No fallback. |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Postgres storage. Run [supabase/schema.sql](supabase/schema.sql) first. | `data/*.json`. |
+| `REVIEW_ENABLED` | `true` turns on `/review`. | `/review` returns 404. |
 
 ## How a visit flows
 
 1. [app/record/page.tsx](app/record/page.tsx) captures the mic, downsamples to 16 kHz PCM16 in
-   [public/pcm-worklet.js](public/pcm-worklet.js), and streams it to AssemblyAI over a WebSocket.
-2. [app/api/transcribe/route.ts](app/api/transcribe/route.ts) mints a temporary streaming token, so the
-   API key never reaches the browser.
-3. Partial transcripts render live. When AssemblyAI's endpointing marks the end of a turn, the formatted
-   turn goes to [app/api/extract/route.ts](app/api/extract/route.ts).
-4. That route extracts only what the new utterance stated, merges it into the running record, and returns
-   the missing required fields plus one question to ask. Turns are queued client-side, so a fast second
-   utterance never races the first extraction.
-5. The browser speaks the question with `SpeechSynthesis` and mutes the mic while speaking.
-6. Once worker name, household ID, at least one symptom or vital, and a follow-up date are present, the
-   agent reads back a summary and saves the visit. Later corrections update the saved row in place.
+   [public/pcm-worklet.js](public/pcm-worklet.js), and streams it to the speech service.
+2. [app/api/transcribe/route.ts](app/api/transcribe/route.ts) returns a short-lived streaming URL. With
+   Sarvam, the browser connects to the relay ([scripts/stt-relay.ts](scripts/stt-relay.ts), deployed on
+   Render by [render.yaml](render.yaml)), which holds the key. Vercel cannot hold WebSockets open.
+3. Each finished turn goes to [app/api/extract/route.ts](app/api/extract/route.ts), which extracts only
+   what that utterance stated, merges it into the record, and returns one question for the next gap.
+4. The browser speaks the question and mutes the mic while speaking.
+5. Once the required fields are present, the agent reads back a summary and saves the visit.
 
-Saying "that's wrong" or "galat hai" clears just the last field filled and re-asks for it, rather than
-restarting the visit.
+Saying "that's wrong" or "galat hai" clears the last field filled and asks for it again.
 
-## Phase 5: patient records and protocols
+Visits are linked to a patient register, and the visit is classified into a protocol (maternal ANC,
+child immunization, and so on) so only that protocol's fields are asked. The due-date engine in
+[lib/schedule.ts](lib/schedule.ts) is date arithmetic against the immunization and ANC schedules, with
+no model involved.
 
-Visits stopped being orphan notes. A name spoken during a visit is matched against the patient
-register, registered once if new, and linked to the visit, so the app can answer "what is this
-child overdue for?" on the next visit.
+## IMNCI sick-child assessment
 
-Extraction became two calls. First [protocol-extract.ts](lib/protocol-extract.ts) classifies the
-visit, then it extracts against that protocol's fields only. A maternal visit is asked about
-gestational month, blood pressure, IFA tablets and danger signs. An immunization visit is asked
-about vaccines given and weight. Neither is asked the other's questions, and a generic "any
-symptoms?" is skipped entirely once a protocol is driving the conversation.
+For a sick child from 2 months up to 5 years, [app/api/triage/route.ts](app/api/triage/route.ts) runs
+the 2023 IMNCI health-worker chart booklet, encoded in
+[imnci-sick-child-2m-5y.json](imnci-sick-child-2m-5y.json) and evaluated by
+[lib/imnci/rules.ts](lib/imnci/rules.ts).
 
-The due-date engine in [schedule.ts](lib/schedule.ts) is pure date arithmetic against India's
-Universal Immunization Programme schedule and the ANC checkup schedule. No model is involved, so
-its output is always correct for a given date of birth or delivery date. It is covered by unit
-tests for month-end clamping, overdue and grace-period boundaries, and doses already given.
+Safety rules, each covered by tests:
 
-The strongest demo moment is the read-back at the *start* of a visit. Type a name on the record
-page, press "Check what is due", and the agent says what is pending before the worker says
-anything, for example "Aarav is overdue for Pentavalent-1, by 107 days."
+- Danger signs are asked first. Any general danger sign ends the questions and gives URGENT REFERRAL.
+- Any pink classification gives urgent referral.
+- A sign that was not assessed never produces a green result.
+- The booklet's treatment column (`imnci_action`) is never shown. The app shows `asha_action` only.
+- Nothing from a model decides a classification. The model only maps her words to sign ids;
+  measurements (breath count, SpO2, MUAC, skin pinch) are parsed from her answer, never from a model.
 
-Two things it deliberately does not do. Age is asked once at registration and then read from the
-record forever, because re-asking is what makes workers abandon an app. And the agent logs and
-flags, it never diagnoses or recommends treatment.
+The child's age is read from the visit sentence ("teen saal ka hai"), or from a patient record that
+existed before the visit, and asked only when neither gives a clear age.
 
-Protocol coverage matches the planner: maternal and child immunization are fully built. Newborn
-HBNC and chronic follow-up are classified and labelled, but reuse the general fields rather than
-having their own question sets.
+### What to tell the mother
+
+[counselling.json](counselling.json) holds the caregiver advice the result card shows and can read
+aloud. Every step is taken from the booklet, or from the 2023 facilitator guide for ORS preparation,
+with a page number and an exact quote. A test checks each quote against the page text kept in
+[sources/imnci-2023/](sources/imnci-2023/). Drug doses and treatment are left out.
+
+- `held_steps`: source text kept in the file but never shown or read aloud until a clinician decides
+  (currently honey and home remedies for cough).
+- `app_notes`: wording written by the app, labelled on the card as "App note, not from the booklet",
+  and never counted as verified.
+- `open_question`: a question for the clinician review page.
+
+### When the model is down
+
+Every model call goes through [lib/llm.ts](lib/llm.ts). It makes up to 3 attempts with exponential
+backoff and jitter, retrying only on 429, 500, 502, 503 and timeouts. It then tries the fallback model
+if one is configured. If every provider fails:
+
+- The assessment carries on with the parsers that need no model (yes or no, counts, days, ages) and
+  asks the worker to repeat any answer that needed the model. No answer is ever filled in for her.
+- Visit extraction uses the rule-based reader, and the worker is told to repeat anything it missed.
+
+Error messages name the provider, model and HTTP status only. They never include keys, transcripts or
+the provider's response body.
+
+## Clinician review workflow
+
+Each rule and advice entry carries `source_check.method`:
+
+- `ai-compared-to-booklet`: compared with the booklet by software.
+- `clinician-reviewed`: confirmed by a named clinician.
+- `not-confirmed`: not found in the source, with a reason.
+
+The card warns until everything behind a result is clinician-reviewed.
+
+1. Deploy or run with `REVIEW_ENABLED=true` and send the clinician to `/review`.
+2. The page lists the open decisions first. Then it lists every rule (signs and thresholds, band,
+   follow-up days, what the app tells the ASHA, page and exact quote) and every advice entry. The
+   clinician marks each item Correct, Wrong or Needs change, with a comment.
+3. A reviewer name and date are required to export. Answers stay in that browser; nothing is written to
+   the database. "Export JSON" downloads the file.
+4. Apply it:
+
+   ```bash
+   node scripts/apply-review.ts imnci-review-2026-10-20-dr-name.json --dry-run   # report only
+   node scripts/apply-review.ts imnci-review-2026-10-20-dr-name.json
+   ```
+
+   Only items marked Correct, whose page and quote still match what the reviewer saw, become
+   `clinician-reviewed` with the reviewer's name and date. Wrong and Needs change items, and the open
+   decisions, are listed for you to act on. Items the file does not mention are never touched. A file
+   without a reviewer name, or with items that are not in the current files, is refused.
+5. Commit the changed JSON files.
+
+## Branch status
+
+- Work is on `imnci-verified`, which is ahead of `main` by the IMNCI commits and is not pushed.
+- `backup-before-coauthor-removal` is an old safety branch from the history rewrite.
+- Before deploying this branch, run the one schema line it needs on the live database (it is already in
+  [supabase/schema.sql](supabase/schema.sql)):
+
+  ```sql
+  alter table visits add column if not exists imnci_triage jsonb;
+  ```
+
+- The source PDFs came from the NHM Mizoram mirror because nhm.gov.in was unreachable. Their SHA-256
+  hashes are recorded in the JSON files; compare them with official copies when possible.
 
 ## Design decisions worth knowing
 
-- The extraction prompt forbids guessing. Anything not spoken stays `null`, because a hallucinated vital
-  sign is worse than a blank one. `normalize()` re-validates the model's output before it is trusted.
-- `raw_transcript` is stored on every visit and shown on the dashboard, so any extraction error is
-  auditable against what was actually said.
-- Required fields are checked server-side in [types/visit.ts](types/visit.ts), so the agent asks about the
-  same gaps whichever client is talking to it.
-- The dashboard flags concerning vitals, currently fever at or above 39°C, SpO2 under 94%, and BP at or
-  above 140/90.
-- A stated month of pregnancy is converted into an approximate delivery date when none was given, so the
-  ANC schedule is usable from the first visit. An exact date always wins over the estimate.
-- LLM calls retry on rate limits and server errors, honouring the provider's stated wait. Free tiers
-  throttle hard, and a live demo should not die on a 429.
+- Extraction prompts forbid guessing. Anything not spoken stays `null`, because a hallucinated vital
+  sign is worse than a blank one. Model output is re-validated before it is used.
+- `raw_transcript` is stored on every visit and shown on the dashboard, so any extraction error can be
+  checked against what was said.
+- Required fields are checked server-side in [types/visit.ts](types/visit.ts), so the agent asks about
+  the same gaps whichever client is talking to it.
+- The dashboard flags fever at or above 39°C, SpO2 under 94%, and BP at or above 140/90.
+- The app logs and flags. It never diagnoses, and the IMNCI result says so.

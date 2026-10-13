@@ -119,10 +119,6 @@ export function lmpFromEdd(edd: string): string {
   return addDays(edd, -GESTATION_DAYS);
 }
 
-export function gestationalWeeks(edd: string, today: string): number {
-  return Math.max(0, Math.floor(daysBetween(lmpFromEdd(edd), today) / 7));
-}
-
 interface AncEntry {
   label: string;
   week: number;

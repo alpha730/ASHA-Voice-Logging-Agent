@@ -28,8 +28,12 @@
       "priority": "urgent",
       "title_en": "Go to the hospital now",
       "title_hi": "अभी अस्पताल जाइए",
-      "steps_en": ["Your child needs to go to the hospital urgently. Go now, do not wait."],
-      "steps_hi": ["बच्चे को तुरंत अस्पताल ले जाना है। अभी जाइए, देर मत कीजिए।"],
+      "steps_en": [
+        "Your child needs to go to the hospital urgently. Go now, do not wait."
+      ],
+      "steps_hi": [
+        "बच्चे को तुरंत अस्पताल ले जाना है। अभी जाइए, देर मत कीजिए।"
+      ],
       "applies_to": [
         "general_danger_sign",
         "severe_pneumonia_or_very_severe_disease",
@@ -46,9 +50,18 @@
         "date": "2026-10-13",
         "quote": "Refer URGENTLY to hospital",
         "supporting": [
-          { "source_page": 9, "quote": "A child with any general danger sign needs URGENT attention; complete the assessment and any pre-referral treatment immediately so that referral is not delayed." },
-          { "source_page": 10, "quote": "Refer URGENTLY to hospital" },
-          { "source_page": 11, "quote": "Refer URGENTLY to hospital" }
+          {
+            "source_page": 9,
+            "quote": "A child with any general danger sign needs URGENT attention; complete the assessment and any pre-referral treatment immediately so that referral is not delayed."
+          },
+          {
+            "source_page": 10,
+            "quote": "Refer URGENTLY to hospital"
+          },
+          {
+            "source_page": 11,
+            "quote": "Refer URGENTLY to hospital"
+          }
         ]
       }
     },
@@ -57,9 +70,15 @@
       "priority": "urgent",
       "title_en": "Keep the child warm on the way",
       "title_hi": "रास्ते में बच्चे को गरम रखिए",
-      "steps_en": ["Keep the child warm on the way to the hospital."],
-      "steps_hi": ["अस्पताल जाते समय रास्ते में बच्चे को गरम रखिए।"],
-      "applies_to": ["severe_acute_malnutrition"],
+      "steps_en": [
+        "Keep the child warm on the way to the hospital."
+      ],
+      "steps_hi": [
+        "अस्पताल जाते समय रास्ते में बच्चे को गरम रखिए।"
+      ],
+      "applies_to": [
+        "severe_acute_malnutrition"
+      ],
       "source": "booklet",
       "source_page": 11,
       "verified": true,
@@ -82,7 +101,9 @@
         "अस्पताल जाते समय रास्ते में बच्चे को बार-बार थोड़ा-थोड़ा ORS पिलाते रहिए।",
         "बच्चे को स्तनपान कराते रहिए।"
       ],
-      "applies_to": ["severe_dehydration"],
+      "applies_to": [
+        "severe_dehydration"
+      ],
       "source": "booklet",
       "source_page": 10,
       "verified": true,
@@ -90,7 +111,12 @@
         "method": "ai-compared-to-booklet",
         "date": "2026-10-13",
         "quote": "Refer URGENTLY to hospital with mother giving frequent sips of ORS on the way.",
-        "supporting": [{ "source_page": 10, "quote": "Advise the mother to continue breastfeeding." }]
+        "supporting": [
+          {
+            "source_page": 10,
+            "quote": "Advise the mother to continue breastfeeding."
+          }
+        ]
       }
     },
     {
@@ -98,9 +124,16 @@
       "priority": "urgent",
       "title_en": "Breastfeed now",
       "title_hi": "अभी स्तनपान कराइए",
-      "steps_en": ["If the child can breastfeed, breastfeed the child now. This helps prevent low blood sugar."],
-      "steps_hi": ["अगर बच्चा स्तनपान कर सकता है, तो अभी स्तनपान कराइए। इससे बच्चे की ब्लड शुगर कम होने से बचती है।"],
-      "applies_to": ["very_severe_febrile_disease", "severe_acute_malnutrition"],
+      "steps_en": [
+        "If the child can breastfeed, breastfeed the child now. This helps prevent low blood sugar."
+      ],
+      "steps_hi": [
+        "अगर बच्चा स्तनपान कर सकता है, तो अभी स्तनपान कराइए। इससे बच्चे की ब्लड शुगर कम होने से बचती है।"
+      ],
+      "applies_to": [
+        "very_severe_febrile_disease",
+        "severe_acute_malnutrition"
+      ],
       "source": "booklet",
       "source_page": 13,
       "verified": true,
@@ -109,9 +142,18 @@
         "date": "2026-10-13",
         "quote": "If the child is able to breastfeed: Ask the mother to breastfeed the child",
         "supporting": [
-          { "source_page": 13, "quote": "Treat the Child to Prevent Low Blood Sugar:" },
-          { "source_page": 10, "quote": "Treat the child to prevent low blood sugar" },
-          { "source_page": 11, "quote": "Treat the child to prevent low blood sugar." }
+          {
+            "source_page": 13,
+            "quote": "Treat the Child to Prevent Low Blood Sugar:"
+          },
+          {
+            "source_page": 10,
+            "quote": "Treat the child to prevent low blood sugar"
+          },
+          {
+            "source_page": 11,
+            "quote": "Treat the child to prevent low blood sugar."
+          }
         ]
       }
     },
@@ -124,17 +166,20 @@
         "Keep breastfeeding, and keep feeding the child during the illness.",
         "Give home fluids, as much as the child will take. This helps the cough.",
         "If the baby is under 6 months and takes only breast milk, do not give any home remedy.",
-        "If the child is over 6 months, you can give a safe home remedy such as honey, tulsi or ginger. Do not give cough syrups.",
+        "Do not give cough syrups.",
         "Keep the nose clean with a soft cotton cloth, and use salt-water nose drops: ½ teaspoon of salt in 1 glass (250 ml) of clean drinking water. Make it fresh every day."
       ],
       "steps_hi": [
         "स्तनपान जारी रखिए, और बीमारी में भी बच्चे को खाना खिलाते रहिए।",
         "घर के पेय, बच्चा जितना पी सके उतना पिलाइए। इससे खांसी में आराम मिलता है।",
         "अगर बच्चा 6 महीने से छोटा है और सिर्फ़ माँ का दूध पीता है, तो कोई घरेलू नुस्खा मत दीजिए।",
-        "अगर बच्चा 6 महीने से बड़ा है, तो शहद, तुलसी या अदरक जैसा सुरक्षित घरेलू नुस्खा दे सकते हैं। खांसी का सिरप मत दीजिए।",
+        "खांसी का सिरप मत दीजिए।",
         "मुलायम सूती कपड़े से नाक साफ़ रखिए, और नमक-पानी की बूँदें डालिए: 1 गिलास (250 ml) साफ़ पीने के पानी में आधा चम्मच नमक। रोज़ नया बनाइए।"
       ],
-      "applies_to": ["pneumonia", "no_pneumonia_cough_or_cold"],
+      "applies_to": [
+        "pneumonia",
+        "no_pneumonia_cough_or_cold"
+      ],
       "source": "booklet",
       "source_page": 13,
       "verified": true,
@@ -143,14 +188,42 @@
         "date": "2026-10-13",
         "quote": "Breastfeeding should be continued. The other advise is to continue feeding the child during the illness.",
         "supporting": [
-          { "source_page": 13, "quote": "Mother is advised to give home available fluids as much as the child would take. This would help in the relief of cough." },
-          { "source_page": 13, "quote": "An infant below 6 months who is exclusively breastfed should not be given any home remedy." },
-          { "source_page": 13, "quote": "The mother is advised to give the child a safe home made cough remedy if the child is more than 6 months of age like honey, tulsi, ginger, herbal concoctions and other safe home remedies. Avoid cough syrups." },
-          { "source_page": 13, "quote": "by cleaning the nose with a soft cotton cloth." },
-          { "source_page": 13, "quote": "Mothers can also prepare saline nasal drops at the home by adding ½ teaspoon of common salt (2.5 gm) to 250 ml (1 glass) of clean drinking water. Fresh solutions should be prepared daily." },
-          { "source_page": 9, "quote": "Advise home care for cough and cold" }
+          {
+            "source_page": 13,
+            "quote": "Mother is advised to give home available fluids as much as the child would take. This would help in the relief of cough."
+          },
+          {
+            "source_page": 13,
+            "quote": "An infant below 6 months who is exclusively breastfed should not be given any home remedy."
+          },
+          {
+            "source_page": 13,
+            "quote": "The mother is advised to give the child a safe home made cough remedy if the child is more than 6 months of age like honey, tulsi, ginger, herbal concoctions and other safe home remedies. Avoid cough syrups."
+          },
+          {
+            "source_page": 13,
+            "quote": "by cleaning the nose with a soft cotton cloth."
+          },
+          {
+            "source_page": 13,
+            "quote": "Mothers can also prepare saline nasal drops at the home by adding ½ teaspoon of common salt (2.5 gm) to 250 ml (1 glass) of clean drinking water. Fresh solutions should be prepared daily."
+          },
+          {
+            "source_page": 9,
+            "quote": "Advise home care for cough and cold"
+          }
         ]
-      }
+      },
+      "held_steps": [
+        {
+          "step_en": "If the child is over 6 months, you can give a safe home remedy such as honey, tulsi or ginger.",
+          "step_hi": "अगर बच्चा 6 महीने से बड़ा है, तो शहद, तुलसी या अदरक जैसा सुरक्षित घरेलू नुस्खा दे सकते हैं।",
+          "hold": true,
+          "hold_reason": "needs clinician decision; honey under 1 year is commonly advised against",
+          "source_page": 13,
+          "quote": "The mother is advised to give the child a safe home made cough remedy if the child is more than 6 months of age like honey, tulsi, ginger, herbal concoctions and other safe home remedies."
+        }
+      ]
     },
     {
       "id": "fever_home_care",
@@ -165,7 +238,10 @@
         "बीमारी में भी बच्चे को खाना खिलाते रहिए, और स्तनपान जारी रखिए।",
         "घर के पेय, बच्चा जितना पी सके उतना पिलाइए। बुखार वाले बच्चे को ज़्यादा पेय चाहिए।"
       ],
-      "applies_to": ["malaria", "fever_malaria_unlikely"],
+      "applies_to": [
+        "malaria",
+        "fever_malaria_unlikely"
+      ],
       "source": "booklet",
       "source_page": 15,
       "verified": true,
@@ -174,8 +250,14 @@
         "date": "2026-10-13",
         "quote": "Advise the mother to continue feeding the child during the illness. Continue breastfeeding.",
         "supporting": [
-          { "source_page": 15, "quote": "For the child with fever who does not have severe disease, advise the mother to treat with home care." },
-          { "source_page": 15, "quote": "Advise the mother to continue giving home available fluids as much as the child would take. The sick child who has fever needs more fluids." }
+          {
+            "source_page": 15,
+            "quote": "For the child with fever who does not have severe disease, advise the mother to treat with home care."
+          },
+          {
+            "source_page": 15,
+            "quote": "Advise the mother to continue giving home available fluids as much as the child would take. The sick child who has fever needs more fluids."
+          }
         ]
       }
     },
@@ -198,7 +280,10 @@
         "हर पतले दस्त के बाद, रोज़ के पेय के अलावा: 2 साल से छोटे बच्चे को चौथाई से आधा कप (50–100 ml), 2 साल या बड़े बच्चे को आधा से 1 कप (100–200 ml) दीजिए।",
         "बच्चे को खाना खिलाते रहिए।"
       ],
-      "applies_to": ["some_dehydration", "no_dehydration"],
+      "applies_to": [
+        "some_dehydration",
+        "no_dehydration"
+      ],
       "source": "booklet",
       "source_page": 14,
       "verified": true,
@@ -207,15 +292,42 @@
         "date": "2026-10-13",
         "quote": "GIVE EXTRA FLUID (as much as the child will take)",
         "supporting": [
-          { "source_page": 14, "quote": "If the child is exclusively breastfed: Breastfeed frequently and for longer duration at each feed. If passing frequent watery stools, give ORS in addition to breastmilk." },
-          { "source_page": 14, "quote": "If the child is 6 months or older : Give one or more of the following home fluids; ORS solution, buttermilk drink, milk, lemon drink, rice or pulses-based drink, vegetable soup, green coconut water or plain clean water." },
-          { "source_page": 14, "quote": "2 months Upto 2 years 1/4 cup to 1/2 cup (50-100 ml) after each loose stool." },
-          { "source_page": 14, "quote": "2 years or more 1/2 cup to 1 cup (100-200 ml) after each loose stool." },
-          { "source_page": 14, "quote": "Continue giving extra fluid until the diarrhoea stops." },
-          { "source_page": 14, "quote": "3. CONTINUE FEEDING" },
-          { "source_page": 14, "quote": "Explain the 4 Rules of Home Treatment:" },
-          { "source_page": 10, "quote": "Give fluids, zinc supplements and food for some dehydration (Plan B)." },
-          { "source_page": 10, "quote": "Give fluids, zinc supplements and food to treat diarrhoea at home (Plan A)." }
+          {
+            "source_page": 14,
+            "quote": "If the child is exclusively breastfed: Breastfeed frequently and for longer duration at each feed. If passing frequent watery stools, give ORS in addition to breastmilk."
+          },
+          {
+            "source_page": 14,
+            "quote": "If the child is 6 months or older : Give one or more of the following home fluids; ORS solution, buttermilk drink, milk, lemon drink, rice or pulses-based drink, vegetable soup, green coconut water or plain clean water."
+          },
+          {
+            "source_page": 14,
+            "quote": "2 months Upto 2 years 1/4 cup to 1/2 cup (50-100 ml) after each loose stool."
+          },
+          {
+            "source_page": 14,
+            "quote": "2 years or more 1/2 cup to 1 cup (100-200 ml) after each loose stool."
+          },
+          {
+            "source_page": 14,
+            "quote": "Continue giving extra fluid until the diarrhoea stops."
+          },
+          {
+            "source_page": 14,
+            "quote": "3. CONTINUE FEEDING"
+          },
+          {
+            "source_page": 14,
+            "quote": "Explain the 4 Rules of Home Treatment:"
+          },
+          {
+            "source_page": 10,
+            "quote": "Give fluids, zinc supplements and food for some dehydration (Plan B)."
+          },
+          {
+            "source_page": 10,
+            "quote": "Give fluids, zinc supplements and food to treat diarrhoea at home (Plan A)."
+          }
         ]
       }
     },
@@ -234,7 +346,10 @@
         "अगर बच्चा उल्टी करे, तो 10 मिनट रुकिए। फिर धीरे-धीरे दोबारा पिलाइए।",
         "बच्चा जब चाहे, स्तनपान कराते रहिए।"
       ],
-      "applies_to": ["some_dehydration", "no_dehydration"],
+      "applies_to": [
+        "some_dehydration",
+        "no_dehydration"
+      ],
       "source": "booklet",
       "source_page": 14,
       "verified": true,
@@ -243,9 +358,18 @@
         "date": "2026-10-13",
         "quote": "Give frequent small sips from a cup.",
         "supporting": [
-          { "source_page": 14, "quote": "If the child vomits, wait 10 minutes. Then continue, but more slowly." },
-          { "source_page": 14, "quote": "Continue breastfeeding whenever the child wants." },
-          { "source_page": 14, "quote": "TEACH THE MOTHER HOW TO MIX AND GIVE ORS." }
+          {
+            "source_page": 14,
+            "quote": "If the child vomits, wait 10 minutes. Then continue, but more slowly."
+          },
+          {
+            "source_page": 14,
+            "quote": "Continue breastfeeding whenever the child wants."
+          },
+          {
+            "source_page": 14,
+            "quote": "TEACH THE MOTHER HOW TO MIX AND GIVE ORS."
+          }
         ]
       }
     },
@@ -266,7 +390,10 @@
         "उसमें 1 लीटर (1000 ml) साफ़ पानी डालिए। पाउडर पूरा घुलने तक अच्छे से मिलाइए।",
         "बना हुआ ORS 24 घंटे के अंदर इस्तेमाल कीजिए। बचा हुआ फेंक दीजिए, और नया पैकेट घोलिए।"
       ],
-      "applies_to": ["some_dehydration", "no_dehydration"],
+      "applies_to": [
+        "some_dehydration",
+        "no_dehydration"
+      ],
       "source": "facilitator_guide",
       "source_page": 86,
       "verified": true,
@@ -275,15 +402,43 @@
         "date": "2026-10-13",
         "quote": "Pour all the ORS powder from one packet into a clean container.",
         "supporting": [
-          { "source_page": 86, "quote": "ORS packets (1000 ml preparation)" },
-          { "source_page": 86, "quote": "Wash your hands with soap and water." },
-          { "source_page": 86, "quote": "Measure 1000 ml of clean water." },
-          { "source_page": 86, "quote": "Pour water into the container. Mix well until the powder is completely dissolved." },
-          { "source_page": 86, "quote": "Keep it for not more than 24 hours after preparation and throw away the unused solution." },
-          { "source_page": 86, "quote": "Dissolve a new ORS packet for giving to the child." },
-          { "source": "booklet", "source_page": 14, "quote": "TEACH THE MOTHER HOW TO MIX AND GIVE ORS." }
+          {
+            "source_page": 86,
+            "quote": "ORS packets (1000 ml preparation)"
+          },
+          {
+            "source_page": 86,
+            "quote": "Wash your hands with soap and water."
+          },
+          {
+            "source_page": 86,
+            "quote": "Measure 1000 ml of clean water."
+          },
+          {
+            "source_page": 86,
+            "quote": "Pour water into the container. Mix well until the powder is completely dissolved."
+          },
+          {
+            "source_page": 86,
+            "quote": "Keep it for not more than 24 hours after preparation and throw away the unused solution."
+          },
+          {
+            "source_page": 86,
+            "quote": "Dissolve a new ORS packet for giving to the child."
+          },
+          {
+            "source": "booklet",
+            "source_page": 14,
+            "quote": "TEACH THE MOTHER HOW TO MIX AND GIVE ORS."
+          }
         ]
-      }
+      },
+      "app_notes": [
+        {
+          "en": "Use the amount of water printed on the ORS packet.",
+          "hi": "ORS पैकेट पर जितना पानी लिखा है, उतना ही पानी डालिए।"
+        }
+      ]
     },
     {
       "id": "feeding_up_to_6_months",
@@ -300,7 +455,11 @@
         "कोई और खाना या पेय मत दीजिए, पानी भी नहीं।",
         "बच्चा बीमार हो तब भी स्तनपान जारी रखिए।"
       ],
-      "applies_to": ["moderate_acute_malnutrition", "no_acute_malnutrition", "anaemia"],
+      "applies_to": [
+        "moderate_acute_malnutrition",
+        "no_acute_malnutrition",
+        "anaemia"
+      ],
       "age_months_min": 0,
       "age_months_max": 6,
       "source": "booklet",
@@ -311,11 +470,26 @@
         "date": "2026-10-13",
         "quote": "Breastfeed as often as the child wants, day and night, at least 8 times in 24 hours.",
         "supporting": [
-          { "source_page": 18, "quote": "Do not give any other foods or fluids not even water" },
-          { "source_page": 18, "quote": "Continue breastfeeding if the child is sick" },
-          { "source_page": 11, "quote": "Assess feeding and counsel the mother on how to feed the child" },
-          { "source_page": 11, "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart." },
-          { "source_page": 11, "quote": "Assess the child`s feeding and counsel the mother on feeding." }
+          {
+            "source_page": 18,
+            "quote": "Do not give any other foods or fluids not even water"
+          },
+          {
+            "source_page": 18,
+            "quote": "Continue breastfeeding if the child is sick"
+          },
+          {
+            "source_page": 11,
+            "quote": "Assess feeding and counsel the mother on how to feed the child"
+          },
+          {
+            "source_page": 11,
+            "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart."
+          },
+          {
+            "source_page": 11,
+            "quote": "Assess the child`s feeding and counsel the mother on feeding."
+          }
         ]
       }
     },
@@ -326,7 +500,7 @@
       "title_hi": "खिलाना (6 से 9 महीने)",
       "steps_en": [
         "Breastfeed as often as the child wants.",
-        "Start with 2 to 3 tablespoons of food. Slowly increase to ½ cup (1 cup = 250 ml).",
+        "Start with 2 to 3 tablespoons of food. Slowly increase to ½ cup (125 ml).",
         "Give mashed roti or rice in undiluted milk, or thick dal or khichri with ghee or oil, with cooked vegetables; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes.",
         "Give 2 to 3 meals a day, and 1 or 2 snacks in between.",
         "Keep the child in your lap and feed with your own hands.",
@@ -334,13 +508,17 @@
       ],
       "steps_hi": [
         "बच्चा जितनी बार चाहे, स्तनपान कराइए।",
-        "2 से 3 चम्मच (बड़े चम्मच) खाने से शुरू कीजिए। धीरे-धीरे आधा कप तक बढ़ाइए (1 कप = 250 ml)।",
+        "2 से 3 चम्मच (बड़े चम्मच) खाने से शुरू कीजिए। धीरे-धीरे आधा कप (125 ml) तक बढ़ाइए।",
         "बिना पानी मिले दूध में मसली रोटी या चावल, या घी/तेल वाली गाढ़ी दाल या खिचड़ी, पकी सब्ज़ी के साथ; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू दीजिए।",
         "दिन में 2 से 3 बार खाना, और बीच में 1 या 2 बार नाश्ता दीजिए।",
         "बच्चे को गोद में बिठाकर अपने हाथ से खिलाइए।",
         "हर बार खिलाने से पहले अपने और बच्चे के हाथ साबुन और पानी से धोइए।"
       ],
-      "applies_to": ["moderate_acute_malnutrition", "no_acute_malnutrition", "anaemia"],
+      "applies_to": [
+        "moderate_acute_malnutrition",
+        "no_acute_malnutrition",
+        "anaemia"
+      ],
       "age_months_min": 6,
       "age_months_max": 9,
       "source": "booklet",
@@ -351,12 +529,34 @@
         "date": "2026-10-13",
         "quote": "Start by giving 2 to 3 tablespoons of food. Gradually increase to 1/2 cups (1 cup = 250 ml)",
         "supporting": [
-          { "source_page": 18, "quote": "Mashed roti/ rice mixed in undiluted milk OR thick dal with added ghee/oil or khichri with added oil/ghee." },
-          { "source_page": 18, "quote": "Sevian/dalia/halwa/kheer prepared in milk or any cereal porridge cooked in milk OR" },
-          { "source_page": 18, "quote": "Give 2 to 3 meals each day. Offer 1 or 2 snacks each day in between" },
-          { "source_page": 18, "quote": "Keep the child in your lap and feed with your own hands" },
-          { "source_page": 18, "quote": "Wash your own and child's hands with soap and water every time before feeding" },
-          { "source_page": 11, "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart." }
+          {
+            "source_page": 18,
+            "quote": "Mashed roti/ rice mixed in undiluted milk OR thick dal with added ghee/oil or khichri with added oil/ghee."
+          },
+          {
+            "source_page": 18,
+            "quote": "Sevian/dalia/halwa/kheer prepared in milk or any cereal porridge cooked in milk OR"
+          },
+          {
+            "source_page": 18,
+            "quote": "Give 2 to 3 meals each day. Offer 1 or 2 snacks each day in between"
+          },
+          {
+            "source_page": 18,
+            "quote": "Keep the child in your lap and feed with your own hands"
+          },
+          {
+            "source_page": 18,
+            "quote": "Wash your own and child's hands with soap and water every time before feeding"
+          },
+          {
+            "source_page": 11,
+            "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart."
+          },
+          {
+            "source_page": 18,
+            "quote": "(1 cup = 250 ml)"
+          }
         ]
       }
     },
@@ -367,19 +567,23 @@
       "title_hi": "खिलाना (9 से 12 महीने)",
       "steps_en": [
         "Breastfeed as often as the child wants.",
-        "Give at least ½ cup at a time of: mashed roti or rice in undiluted milk, or thick dal or khichri with ghee or oil, with cooked vegetables; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes.",
+        "Give at least ½ cup (125 ml) at a time of: mashed roti or rice in undiluted milk, or thick dal or khichri with ghee or oil, with cooked vegetables; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes.",
         "Give this 3 times a day if breastfed, 5 times a day if not breastfed.",
         "Keep the child in your lap and feed with your own hands.",
         "Wash your hands and the child's hands with soap and water before every feed."
       ],
       "steps_hi": [
         "बच्चा जितनी बार चाहे, स्तनपान कराइए।",
-        "एक बार में कम से कम आधा कप दीजिए: बिना पानी मिले दूध में मसली रोटी या चावल, या घी/तेल वाली गाढ़ी दाल या खिचड़ी, पकी सब्ज़ी के साथ; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू।",
+        "एक बार में कम से कम आधा कप (125 ml) दीजिए: बिना पानी मिले दूध में मसली रोटी या चावल, या घी/तेल वाली गाढ़ी दाल या खिचड़ी, पकी सब्ज़ी के साथ; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू।",
         "स्तनपान करता हो तो दिन में 3 बार, न करता हो तो 5 बार दीजिए।",
         "बच्चे को गोद में बिठाकर अपने हाथ से खिलाइए।",
         "हर बार खिलाने से पहले अपने और बच्चे के हाथ साबुन और पानी से धोइए।"
       ],
-      "applies_to": ["moderate_acute_malnutrition", "no_acute_malnutrition", "anaemia"],
+      "applies_to": [
+        "moderate_acute_malnutrition",
+        "no_acute_malnutrition",
+        "anaemia"
+      ],
       "age_months_min": 9,
       "age_months_max": 12,
       "source": "booklet",
@@ -390,11 +594,30 @@
         "date": "2026-10-13",
         "quote": "Give at least 1/2 cup serving at a time of:",
         "supporting": [
-          { "source_page": 18, "quote": "3 times per day if breastfed; 5 times per day if not breastfed." },
-          { "source_page": 18, "quote": "Mashed roti/ rice mixed in undiluted milk OR thick dal with added ghee/oil or khichri with added oil/ghee. Add cooked vegetables also in the servings OR" },
-          { "source_page": 18, "quote": "Keep the child in your lap and feed with your own hands" },
-          { "source_page": 18, "quote": "Wash your own and child's hands with soap and water every time before feeding" },
-          { "source_page": 11, "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart." }
+          {
+            "source_page": 18,
+            "quote": "3 times per day if breastfed; 5 times per day if not breastfed."
+          },
+          {
+            "source_page": 18,
+            "quote": "Mashed roti/ rice mixed in undiluted milk OR thick dal with added ghee/oil or khichri with added oil/ghee. Add cooked vegetables also in the servings OR"
+          },
+          {
+            "source_page": 18,
+            "quote": "Keep the child in your lap and feed with your own hands"
+          },
+          {
+            "source_page": 18,
+            "quote": "Wash your own and child's hands with soap and water every time before feeding"
+          },
+          {
+            "source_page": 11,
+            "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart."
+          },
+          {
+            "source_page": 18,
+            "quote": "(1 cup = 250 ml)"
+          }
         ]
       }
     },
@@ -406,7 +629,7 @@
       "steps_en": [
         "Breastfeed as often as the child wants.",
         "Give food from the family pot.",
-        "Give at least ¾ cup at a time of: mashed roti or rice in thick dal with ghee or oil, or khichri with ghee or oil, with cooked vegetables; or roti or rice in undiluted milk; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes. Offer banana, cheeku, mango or papaya.",
+        "Give at least ¾ cup (about 190 ml) at a time of: mashed roti or rice in thick dal with ghee or oil, or khichri with ghee or oil, with cooked vegetables; or roti or rice in undiluted milk; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes. Offer banana, cheeku, mango or papaya.",
         "Give food 5 times a day.",
         "Sit with the child and help them finish the serving.",
         "Wash the child's hands with soap and water before every feed."
@@ -414,12 +637,16 @@
       "steps_hi": [
         "बच्चा जितनी बार चाहे, स्तनपान कराइए।",
         "घर में बना परिवार का खाना दीजिए।",
-        "एक बार में कम से कम पौना कप दीजिए: घी/तेल वाली गाढ़ी दाल में मसली रोटी या चावल, या घी/तेल वाली खिचड़ी, पकी सब्ज़ी के साथ; या बिना पानी मिले दूध में रोटी या चावल; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू। केला, चीकू, आम या पपीता भी दीजिए।",
+        "एक बार में कम से कम पौना कप (लगभग 190 ml) दीजिए: घी/तेल वाली गाढ़ी दाल में मसली रोटी या चावल, या घी/तेल वाली खिचड़ी, पकी सब्ज़ी के साथ; या बिना पानी मिले दूध में रोटी या चावल; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू। केला, चीकू, आम या पपीता भी दीजिए।",
         "दिन में 5 बार खाना दीजिए।",
         "बच्चे के पास बैठकर पूरा खाना खत्म करने में मदद कीजिए।",
         "हर बार खिलाने से पहले बच्चे के हाथ साबुन और पानी से धोइए।"
       ],
-      "applies_to": ["moderate_acute_malnutrition", "no_acute_malnutrition", "anaemia"],
+      "applies_to": [
+        "moderate_acute_malnutrition",
+        "no_acute_malnutrition",
+        "anaemia"
+      ],
       "age_months_min": 12,
       "age_months_max": 24,
       "source": "booklet",
@@ -430,12 +657,34 @@
         "date": "2026-10-13",
         "quote": "Give at least 3/4 cup serving at a time of: Mashed roti/rice mixed in thick dal with added ghee/oil or khichri with added oil/ghee. Add cooked vegetables also in the servings OR",
         "supporting": [
-          { "source_page": 18, "quote": "Offer food from the family pot" },
-          { "source_page": 18, "quote": "Offer banana/cheeko/ mango/ papaya" },
-          { "source_page": 18, "quote": "5 times per day." },
-          { "source_page": 18, "quote": "Sit by the side of child and help him to finish the serving" },
-          { "source_page": 18, "quote": "Wash your child's hands with soap and water every time before feeding" },
-          { "source_page": 11, "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart." }
+          {
+            "source_page": 18,
+            "quote": "Offer food from the family pot"
+          },
+          {
+            "source_page": 18,
+            "quote": "Offer banana/cheeko/ mango/ papaya"
+          },
+          {
+            "source_page": 18,
+            "quote": "5 times per day."
+          },
+          {
+            "source_page": 18,
+            "quote": "Sit by the side of child and help him to finish the serving"
+          },
+          {
+            "source_page": 18,
+            "quote": "Wash your child's hands with soap and water every time before feeding"
+          },
+          {
+            "source_page": 11,
+            "quote": "If child is less than 2 years old, assess the child's feeding and counsel the mother on feeding according to the FOOD box on the COUNSEL THE MOTHER chart."
+          },
+          {
+            "source_page": 18,
+            "quote": "(1 cup = 250 ml)"
+          }
         ]
       }
     },
@@ -460,7 +709,10 @@
         "ध्यान रखिए कि बच्चा पूरा खाना खत्म करे।",
         "बच्चे को हर बार खाने से पहले साबुन और पानी से हाथ धोना सिखाइए।"
       ],
-      "applies_to": ["moderate_acute_malnutrition", "anaemia"],
+      "applies_to": [
+        "moderate_acute_malnutrition",
+        "anaemia"
+      ],
       "age_months_min": 24,
       "age_months_max": 60,
       "source": "booklet",
@@ -471,14 +723,38 @@
         "date": "2026-10-13",
         "quote": "Give a variety of family foods to your child, including animal source and vitamin-A rich foods and vegetables",
         "supporting": [
-          { "source_page": 18, "quote": "Give at least 1 cup (250ml) serving at a time" },
-          { "source_page": 18, "quote": "Give family foods at 3 –4 meals each day." },
-          { "source_page": 18, "quote": "Also, twice daily, give nutritious food between meals, such as: banana/cheeko/mango/ papaya as snacks" },
-          { "source_page": 18, "quote": "If child refuses a new food, offer “tastes” several times. Be patient." },
-          { "source_page": 18, "quote": "Ensure that the child finishes the serving" },
-          { "source_page": 18, "quote": "Teach your child wash his hands with soap and water every time before feeding" },
-          { "source_page": 11, "quote": "Assess feeding and counsel the mother on how to feed the child" },
-          { "source_page": 11, "quote": "Assess the child`s feeding and counsel the mother on feeding." }
+          {
+            "source_page": 18,
+            "quote": "Give at least 1 cup (250ml) serving at a time"
+          },
+          {
+            "source_page": 18,
+            "quote": "Give family foods at 3 –4 meals each day."
+          },
+          {
+            "source_page": 18,
+            "quote": "Also, twice daily, give nutritious food between meals, such as: banana/cheeko/mango/ papaya as snacks"
+          },
+          {
+            "source_page": 18,
+            "quote": "If child refuses a new food, offer “tastes” several times. Be patient."
+          },
+          {
+            "source_page": 18,
+            "quote": "Ensure that the child finishes the serving"
+          },
+          {
+            "source_page": 18,
+            "quote": "Teach your child wash his hands with soap and water every time before feeding"
+          },
+          {
+            "source_page": 11,
+            "quote": "Assess feeding and counsel the mother on how to feed the child"
+          },
+          {
+            "source_page": 11,
+            "quote": "Assess the child`s feeding and counsel the mother on feeding."
+          }
         ]
       }
     },
@@ -517,8 +793,15 @@
         "date": "2026-10-13",
         "quote": "Advise mother to return immediately if the child has any of these signs: Any sick child Not able to drink or breastfeed Becomes sicker Develops fever",
         "supporting": [
-          { "source": "facilitator_guide", "source_page": 107, "quote": "develops fever (unless the child already has a fever)" },
-          { "source_page": 15, "quote": "Teach the mother to look for signs of illness when to return to you immediately." }
+          {
+            "source": "facilitator_guide",
+            "source_page": 107,
+            "quote": "develops fever (unless the child already has a fever)"
+          },
+          {
+            "source_page": 15,
+            "quote": "Teach the mother to look for signs of illness when to return to you immediately."
+          }
         ]
       }
     },
@@ -527,9 +810,15 @@
       "priority": "normal",
       "title_en": "Cough or cold: also come back if",
       "title_hi": "खांसी-जुकाम: इसमें भी वापस आइए",
-      "steps_en": ["Also come back at once if the child breathes fast or has difficulty breathing."],
-      "steps_hi": ["अगर बच्चा तेज़ साँस ले या साँस लेने में तकलीफ़ हो, तो भी तुरंत वापस आइए।"],
-      "applies_to": ["no_pneumonia_cough_or_cold"],
+      "steps_en": [
+        "Also come back at once if the child breathes fast or has difficulty breathing."
+      ],
+      "steps_hi": [
+        "अगर बच्चा तेज़ साँस ले या साँस लेने में तकलीफ़ हो, तो भी तुरंत वापस आइए।"
+      ],
+      "applies_to": [
+        "no_pneumonia_cough_or_cold"
+      ],
       "source": "booklet",
       "source_page": 16,
       "verified": true,
@@ -544,9 +833,16 @@
       "priority": "normal",
       "title_en": "Diarrhoea: also come back if",
       "title_hi": "दस्त: इसमें भी वापस आइए",
-      "steps_en": ["Also come back at once if there is blood in the stool or the child drinks poorly."],
-      "steps_hi": ["अगर पाखाने में खून आए या बच्चा ठीक से न पिए, तो भी तुरंत वापस आइए।"],
-      "applies_to": ["some_dehydration", "no_dehydration"],
+      "steps_en": [
+        "Also come back at once if there is blood in the stool or the child drinks poorly."
+      ],
+      "steps_hi": [
+        "अगर पाखाने में खून आए या बच्चा ठीक से न पिए, तो भी तुरंत वापस आइए।"
+      ],
+      "applies_to": [
+        "some_dehydration",
+        "no_dehydration"
+      ],
       "source": "booklet",
       "source_page": 16,
       "verified": true,
@@ -561,8 +857,12 @@
       "priority": "normal",
       "title_en": "Follow-up visit",
       "title_hi": "फ़ॉलो-अप के लिए आना",
-      "steps_en": ["Come back for the follow-up visit on the day you are given. If you are given more than one day, come on the earliest one."],
-      "steps_hi": ["फ़ॉलो-अप के लिए बताए गए दिन वापस आइए। अगर एक से ज़्यादा दिन बताए गए हों, तो सबसे पहले वाले दिन आइए।"],
+      "steps_en": [
+        "Come back for the follow-up visit on the day you are given. If you are given more than one day, come on the earliest one."
+      ],
+      "steps_hi": [
+        "फ़ॉलो-अप के लिए बताए गए दिन वापस आइए। अगर एक से ज़्यादा दिन बताए गए हों, तो सबसे पहले वाले दिन आइए।"
+      ],
       "applies_to": [
         "pneumonia",
         "no_pneumonia_cough_or_cold",
@@ -580,18 +880,55 @@
         "method": "ai-compared-to-booklet",
         "date": "2026-10-13",
         "quote": "Advise the mother to come for follow-up at the earliest time listed for the child's problems"
-      }
+      },
+      "open_question": "Diarrhoea follow-up: booklet page 10 says SOME DEHYDRATION 'Follow-up after 2 days if not improving'; the booklet's page 16 table and facilitator guide page 107 say DIARRHOEA 'if not improving' 5 days. The advice gives no number and the protocol keeps 2 days for some dehydration. Which should apply?"
     }
   ],
   "excluded": [
-    { "what": "Antibiotic, antimalarial, paracetamol, gentamicin, iron-folic acid and vitamin A doses", "where": "booklet pages 12, 15", "why": "drug doses and treatment are out of scope" },
-    { "what": "Zinc supplements for 14 days (rule 2 of home treatment) and how to dissolve zinc", "where": "booklet page 14; facilitator guide pages 90-91", "why": "a dosed supplement; treatment, not home advice" },
-    { "what": "Expressed breastmilk, animal milk or sugar water (20-50 ml) before departure, and by nasogastric tube", "where": "booklet page 13", "why": "given by the health worker, with amounts by weight; the tube needs trained staff" },
-    { "what": "Plan B ORS amounts for the first 4 hours", "where": "booklet page 14", "why": "given and reassessed in the clinic" },
-    { "what": "Where referral is not possible (injections, transfusion)", "where": "booklet page 12", "why": "ANM / medical officer treatment" },
-    { "what": "Feeding-problem counselling (bottle feeding, other milk, not feeding well)", "where": "booklet page 19", "why": "depends on a feeding assessment this app does not do" },
-    { "what": "Development, mother's own health, immunization", "where": "booklet pages 11, 19, 20", "why": "not tied to a sick-child classification" },
-    { "what": "Keeping a young infant warm (skin to skin, room heating)", "where": "booklet pages 4-8", "why": "young infant (under 2 months) chart, not this pathway" },
-    { "what": "Ear and measles advice", "where": "-", "why": "those rules are retired" }
+    {
+      "what": "Antibiotic, antimalarial, paracetamol, gentamicin, iron-folic acid and vitamin A doses",
+      "where": "booklet pages 12, 15",
+      "why": "drug doses and treatment are out of scope"
+    },
+    {
+      "what": "Zinc supplements for 14 days (rule 2 of home treatment) and how to dissolve zinc",
+      "where": "booklet page 14; facilitator guide pages 90-91",
+      "why": "a dosed supplement; treatment, not home advice"
+    },
+    {
+      "what": "Expressed breastmilk, animal milk or sugar water (20-50 ml) before departure, and by nasogastric tube",
+      "where": "booklet page 13",
+      "why": "given by the health worker, with amounts by weight; the tube needs trained staff"
+    },
+    {
+      "what": "Plan B ORS amounts for the first 4 hours",
+      "where": "booklet page 14",
+      "why": "given and reassessed in the clinic"
+    },
+    {
+      "what": "Where referral is not possible (injections, transfusion)",
+      "where": "booklet page 12",
+      "why": "ANM / medical officer treatment"
+    },
+    {
+      "what": "Feeding-problem counselling (bottle feeding, other milk, not feeding well)",
+      "where": "booklet page 19",
+      "why": "depends on a feeding assessment this app does not do"
+    },
+    {
+      "what": "Development, mother's own health, immunization",
+      "where": "booklet pages 11, 19, 20",
+      "why": "not tied to a sick-child classification"
+    },
+    {
+      "what": "Keeping a young infant warm (skin to skin, room heating)",
+      "where": "booklet pages 4-8",
+      "why": "young infant (under 2 months) chart, not this pathway"
+    },
+    {
+      "what": "Ear and measles advice",
+      "where": "-",
+      "why": "those rules are retired"
+    }
   ]
 }

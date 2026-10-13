@@ -38,7 +38,14 @@ export interface ExtractResponse {
   protocolData: ProtocolData;
   protocolExpecting: string | null; // protocol field the agent is now asking about
   missingProtocol: string[];
+  notice?: string | null; // shown to the worker, e.g. when the language model was unavailable
 }
+
+/** The model was down and only the rule-based reader ran: nothing was guessed, so ask her to repeat. */
+const MODEL_BUSY: Record<UiLang, string> = {
+  en: "The language model is busy, so only the simple reader was used. If something you said is missing, please say it again.",
+  hi: "भाषा मॉडल अभी व्यस्त है, इसलिए सिर्फ़ साधारण तरीके से पढ़ा गया। अगर आपकी कोई बात छूट गई हो, तो कृपया दोबारा बोलिए।",
+};
 
 function filledFields(v: ExtractedVisit): Set<RequiredField> {
   const missing = new Set(missingFields(v));
@@ -90,14 +97,15 @@ export async function POST(req: Request) {
     const protocol = body.protocol ?? (await classifyVisit(turn));
 
     const before = filledFields(current);
-    const [extracted, protocolExtracted] = await Promise.all([
+    const [{ visit: extracted, modelUnavailable }, protocolExtracted] = await Promise.all([
       extractVisit(turn, today, { current, expecting: body.expecting ?? null }),
       extractProtocolData(turn, today, protocol, body.protocolData ?? {}, body.protocolExpecting ?? null),
     ]);
 
     const visit = mergeVisit(current, extracted);
     visit.visit_date ??= today;
-    const protocolData = mergeProtocolData(body.protocolData ?? {}, protocolExtracted, body.protocolExpecting ?? null);
+    const protocolData = mergeProtocolData(body.protocolData ?? {}, protocolExtracted.data, body.protocolExpecting ?? null, protocolExtracted.fromModel);
+    const degraded = modelUnavailable || protocolExtracted.modelUnavailable;
 
     // Never ask a registered patient for something already on file.
     if (body.patientId) {
@@ -139,6 +147,7 @@ export async function POST(req: Request) {
       protocolData,
       protocolExpecting: nextProtocol?.key ?? null,
       missingProtocol: missingProtocol.map((f) => f.key),
+      notice: degraded ? MODEL_BUSY[lang] : null,
     });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

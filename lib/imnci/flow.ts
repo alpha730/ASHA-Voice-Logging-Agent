@@ -429,3 +429,23 @@ export function outOfRangeMessage(months: number, lang: Lang): string {
   const young = months < AGE_MIN_MONTHS ? " For a young infant under 2 months, use the young infant chart; this app does not cover it." : "";
   return `The child is ${months} months old. This IMNCI assessment is only for children from 2 months up to 5 years, so it was not started.${young}`;
 }
+
+/**
+ * Said when every model provider is down and her answer could not be read without one. The
+ * question is asked again in a form the parser reads directly; the answer is never guessed.
+ */
+export function modelBusyRepeat(step: Step, lang: Lang): string {
+  const prompt = promptText(step, lang);
+  if (lang === "hi") {
+    const how = step.kind === "days" ? `दिनों की संख्या बताइए, जैसे "3 दिन"` : `"हाँ" या "नहीं" में जवाब दीजिए`;
+    return `भाषा मॉडल अभी व्यस्त है, इसलिए जवाब समझ नहीं आया। कृपया दोबारा, ${how}। ${prompt}`;
+  }
+  const how = step.kind === "days" ? `say the number of days, for example "3 days"` : `answer "yes" or "no"`;
+  return `The language model is busy, so I could not read that answer. Please say it again and ${how}. ${prompt}`;
+}
+
+/** Opening line when the visit sentence could not be read for signs because the model was down. */
+export const MODEL_BUSY_START: Record<Lang, string> = {
+  en: "The language model is busy, so I will ask each question in turn. ",
+  hi: "भाषा मॉडल अभी व्यस्त है, इसलिए मैं हर सवाल एक-एक करके पूछूँगी। ",
+};
