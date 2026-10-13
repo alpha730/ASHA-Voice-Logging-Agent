@@ -1,17 +1,12 @@
 // WebSocket relay between the browser and Sarvam, so the Sarvam key never leaves the server.
-// Browser -> relay: binary PCM16 frames, plus {"type":"Terminate"} on stop (same as AssemblyAI).
+// Browser -> relay: binary PCM16 frames, {"type":"ForceEndpoint"} when hold-to-talk is released, and
+// {"type":"Terminate"} on stop (the same messages as AssemblyAI). ?endpointing=manual turns on
+// Sarvam's manual turns (speech_start / speech_end / flush); ?language_code= overrides the language.
 // Relay -> browser: AssemblyAI-shaped Turn/Error messages, translated in lib/sarvam.ts.
 //
 // Run: npm run relay   (next to npm run dev)
 import { WebSocket, WebSocketServer, type RawData } from "ws";
-import {
-  END_MESSAGE,
-  PING_MESSAGE,
-  audioMessage,
-  toClientMessage,
-  upstreamConnection,
-  verifyStreamingToken,
-} from "../lib/sarvam.ts";
+import { END_MESSAGE, PING_MESSAGE, relayOptions, relaySession, toClientMessage, upstreamConnection, verifyStreamingToken } from "../lib/sarvam.ts";
 
 const PORT = Number(process.env.PORT || process.env.STT_RELAY_PORT || 8787);
 const PING_MS = 15_000;
@@ -26,9 +21,11 @@ server.on("connection", (client, req) => {
     return;
   }
 
+  const opts = relayOptions(params);
+  const session = relaySession(opts.endpointing);
   let upstream: WebSocket;
   try {
-    const { url, headers } = upstreamConnection(Number(params.get("sample_rate") || 16000));
+    const { url, headers } = upstreamConnection(opts.sampleRate, { language: opts.language, endpointing: opts.endpointing });
     upstream = new WebSocket(url, { headers });
   } catch (err) {
     client.close(1011, (err as Error).message.slice(0, 120));
@@ -58,16 +55,11 @@ server.on("connection", (client, req) => {
   upstream.on("error", (err) => console.error("[relay] upstream error:", err.message));
 
   client.on("message", (data: RawData, isBinary) => {
-    let msg: string;
-    if (isBinary) {
-      msg = audioMessage(Array.isArray(data) ? Buffer.concat(data) : Buffer.from(data as Buffer));
-    } else if (data.toString().includes('"Terminate"')) {
-      msg = END_MESSAGE;
-    } else {
-      return;
+    const buf = Array.isArray(data) ? Buffer.concat(data) : Buffer.from(data as Buffer);
+    for (const msg of session.fromClient(buf, isBinary)) {
+      if (upstream.readyState === WebSocket.OPEN) upstream.send(msg);
+      else if (upstream.readyState === WebSocket.CONNECTING && queued.length < MAX_QUEUED_FRAMES) queued.push(msg);
     }
-    if (upstream.readyState === WebSocket.OPEN) upstream.send(msg);
-    else if (upstream.readyState === WebSocket.CONNECTING && queued.length < MAX_QUEUED_FRAMES) queued.push(msg);
   });
   client.on("close", () => {
     clearInterval(ping);

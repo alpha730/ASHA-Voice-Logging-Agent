@@ -8,8 +8,8 @@ import {
   choiceLabels,
   inAgeBand,
   isUnknownAnswer,
-  MODEL_BUSY_START,
   modelBusyRepeat,
+  modelBusyStart,
   nextStep,
   outOfRangeMessage,
   promptText,
@@ -20,17 +20,16 @@ import {
 import { askIfChecker, PROTOCOL, STEPS } from "@/lib/imnci/protocol";
 import { buildRecord, evaluateTriage, type ImnciTriageRecord } from "@/lib/imnci/record";
 import type { Signs, TriageResult } from "@/lib/imnci/rules";
+import { toLang } from "@/lib/i18n";
 import { ageInMonths } from "@/lib/schedule";
+import { t } from "@/lib/text";
 
 export const dynamic = "force-dynamic";
 
 const AGE_STEP = "__age__";
 /** After this many unclear answers the step is recorded as not assessed, never guessed. */
 const MAX_ATTEMPTS = 3;
-const AGE_QUESTION: Record<Lang, string> = {
-  en: "How old is the child, in months?",
-  hi: "बच्चा कितने महीने का है?",
-};
+const ageQuestion = (lang: Lang) => t("triage.age_question", lang);
 
 /** Where the age came from: the patient record, the worker's visit sentence, or her answer to "how old?". */
 export type AgeSource = "record" | "speech" | "answer";
@@ -73,30 +72,19 @@ type StartBody = {
 };
 type TurnBody = { action: "turn"; state: TriageState; turn: string; lang: Lang; visitId: string | null };
 
-const OUTCOME_LINE: Record<TriageResult["outcome"], Record<Lang, string>> = {
-  urgent_referral: { en: "Urgent referral.", hi: "तुरंत refer कीजिए।" },
-  refer: { en: "Refer.", hi: "Refer कीजिए।" },
-  treat_follow_up: { en: "Treat and follow up.", hi: "इलाज और follow-up कीजिए।" },
-  home_care: { en: "Home care.", hi: "घर पर देखभाल।" },
-  incomplete: { en: "Assessment incomplete.", hi: "जाँच अधूरी है।" },
-  not_applicable: { en: "This assessment does not apply.", hi: "यह जाँच इस बच्चे पर लागू नहीं होती।" },
-};
-
 function closing(result: TriageResult, lang: Lang): string {
   const names = result.classifications.map((c) => c.name.toLowerCase()).join(", ");
-  return [OUTCOME_LINE[result.outcome][lang], names].filter(Boolean).join(" ");
+  return [t(`triage.outcome.${result.outcome}`, lang), names].filter(Boolean).join(" ");
 }
 
 /** Said once, before the first question, when the age was taken from her sentence. */
 function ageLine(state: TriageState, lang: Lang): string {
   if (state.ageSource !== "speech") return "";
-  return lang === "hi"
-    ? `आपकी बात से बच्चे की उम्र ${state.ageMonths} महीने ली है। गलत हो तो कहिए "उम्र गलत है"। `
-    : `Taking the child's age as ${state.ageMonths} months, from what you said. If that is wrong, say "age is wrong". `;
+  return t("triage.age_line", lang, { months: state.ageMonths ?? "" });
 }
 
 function unclearAge(reason: string, lang: Lang): string {
-  return lang === "hi" ? `उम्र साफ़ नहीं हुई (${reason})। ${AGE_QUESTION.hi}` : `I could not be sure of the age (${reason}). ${AGE_QUESTION.en}`;
+  return t("triage.age_unclear", lang, { reason, question: ageQuestion(lang) });
 }
 
 const base = {
@@ -160,13 +148,13 @@ async function seed(state: TriageState): Promise<{ state: TriageState; modelUnav
 async function begin(state: TriageState, lang: Lang, visitId: string | null): Promise<TriageResponse> {
   const seeded = await seed(state);
   const res = await advance(seeded.state, lang, visitId);
-  const busy = seeded.modelUnavailable ? MODEL_BUSY_START[lang] : "";
+  const busy = seeded.modelUnavailable ? modelBusyStart(lang) : "";
   return res.question ? { ...res, question: busy + ageLine(state, lang) + res.question } : res;
 }
 
 export async function POST(req: Request) {
   const body = (await req.json()) as StartBody | TurnBody;
-  const lang: Lang = body.lang === "en" ? "en" : "hi";
+  const lang: Lang = toLang(body.lang);
 
   try {
     if (body.action === "start") {
@@ -202,7 +190,7 @@ export async function POST(req: Request) {
         stoppedEarly: false,
         attempts: 0,
       };
-      if (entry === "ask_age") return NextResponse.json(askAge(state, unclearReason ? unclearAge(unclearReason, lang) : AGE_QUESTION[lang]));
+      if (entry === "ask_age") return NextResponse.json(askAge(state, unclearReason ? unclearAge(unclearReason, lang) : ageQuestion(lang)));
       return NextResponse.json(await begin(state, lang, body.visitId ?? null));
     }
 
@@ -216,14 +204,14 @@ export async function POST(req: Request) {
     const log = [...state.log];
     if (AGE_CORRECTION_RE.test(turn) || (CORRECTION_RE.test(turn) && state.ageSource === "speech" && state.lastAnswered == null)) {
       log.push({ q: "(age correction)", a: turn });
-      return NextResponse.json(askAge({ ...state, log }, AGE_QUESTION[lang]));
+      return NextResponse.json(askAge({ ...state, log }, ageQuestion(lang)));
     }
 
     if (state.expecting === AGE_STEP) {
-      log.push({ q: AGE_QUESTION[lang], a: turn });
+      log.push({ q: ageQuestion(lang), a: turn });
       const r = ageFromText(turn, { answer: true });
       if (r.kind !== "age") {
-        const q = r.kind === "unclear" ? unclearAge(r.reason, lang) : AGE_QUESTION[lang];
+        const q = r.kind === "unclear" ? unclearAge(r.reason, lang) : ageQuestion(lang);
         return NextResponse.json<TriageResponse>({ ...base, active: true, state: { ...state, log }, result: null, question: q, say: null });
       }
       if (!inAgeBand(r.months)) return NextResponse.json(notStarted(outOfRangeMessage(r.months, lang)));
@@ -240,7 +228,7 @@ export async function POST(req: Request) {
         const signs = { ...state.signs };
         for (const id of last.signs) signs[id] = null;
         log.push({ q: asked, a: turn });
-        const again = lang === "hi" ? `ठीक है, फिर से: ${promptText(last, lang)}` : `OK, again: ${promptText(last, lang)}`;
+        const again = t("triage.again", lang, { question: promptText(last, lang) });
         const reopened: TriageState = {
           ...state,
           signs,
@@ -279,7 +267,7 @@ export async function POST(req: Request) {
         return NextResponse.json(await advance({ ...state, signs, log, skipped: [...state.skipped, step.key], lastAnswered: step.key, attempts: 0 }, lang, visitId));
       }
       const options = step.choices ? ` (${choiceLabels(step, lang).join(" / ")})` : "";
-      const again = lang === "hi" ? `समझ नहीं आया। ${asked}${options}` : `Sorry, I did not get that. ${asked}${options}`;
+      const again = t("triage.unclear", lang, { question: asked, options });
       return NextResponse.json<TriageResponse>({ ...base, active: true, state: { ...state, signs, log, attempts: state.attempts + 1 }, result: evaluateTriage(signs, state.ageMonths, state.skipped), question: again, say: null });
     }
     return NextResponse.json(await advance({ ...state, signs, log, lastAnswered: step?.key ?? state.lastAnswered }, lang, visitId));

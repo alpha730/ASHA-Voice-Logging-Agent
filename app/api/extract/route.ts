@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { clearField, extractVisit, mergeVisit, normalize } from "@/lib/extraction";
 import { CORRECTION_RE, questionFor, summaryLine, type UiLang } from "@/lib/agent";
+import { toLang } from "@/lib/i18n";
+import { t } from "@/lib/text";
 import { classifyVisit, extractProtocolData, mergeProtocolData, type ProtocolData } from "@/lib/protocol-extract";
 import { missingProtocolFields, protocolFields, PROTOCOLS } from "@/lib/protocols";
 import { getPatient } from "@/lib/db";
@@ -41,11 +43,6 @@ export interface ExtractResponse {
   notice?: string | null; // shown to the worker, e.g. when the language model was unavailable
 }
 
-/** The model was down and only the rule-based reader ran: nothing was guessed, so ask her to repeat. */
-const MODEL_BUSY: Record<UiLang, string> = {
-  en: "The language model is busy, so only the simple reader was used. If something you said is missing, please say it again.",
-  hi: "भाषा मॉडल अभी व्यस्त है, इसलिए सिर्फ़ साधारण तरीके से पढ़ा गया। अगर आपकी कोई बात छूट गई हो, तो कृपया दोबारा बोलिए।",
-};
 
 function filledFields(v: ExtractedVisit): Set<RequiredField> {
   const missing = new Set(missingFields(v));
@@ -64,7 +61,7 @@ function coreMissing(visit: ExtractedVisit, protocol: VisitProtocol | null, data
 
 export async function POST(req: Request) {
   const body = (await req.json()) as ExtractRequest;
-  const lang: UiLang = body.lang === "en" ? "en" : "hi";
+  const lang: UiLang = toLang(body.lang);
   const today = body.today ?? new Date().toISOString().slice(0, 10);
   const current = normalize(body.current ?? {});
   const turn = (body.turn ?? "").trim();
@@ -130,7 +127,7 @@ export async function POST(req: Request) {
     const question = nextCore
       ? questionFor(nextCore, lang)
       : nextProtocol
-        ? nextProtocol.question[lang]
+        ? t(nextProtocol.question, lang)
         : null;
 
     return NextResponse.json<ExtractResponse>({
@@ -147,7 +144,7 @@ export async function POST(req: Request) {
       protocolData,
       protocolExpecting: nextProtocol?.key ?? null,
       missingProtocol: missingProtocol.map((f) => f.key),
-      notice: degraded ? MODEL_BUSY[lang] : null,
+      notice: degraded ? t("agent.model_busy", lang) : null,
     });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

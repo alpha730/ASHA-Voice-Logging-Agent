@@ -145,3 +145,20 @@ textarea, input[type="text"] { font: inherit; width: 100%; padding: 8px; border:
 .review-quote { margin: 6px 0; padding: 6px 10px; border-left: 3px solid var(--line); background: var(--bg); font-style: italic; overflow-wrap: anywhere; }
 .review-verdict { display: flex; flex-wrap: wrap; gap: 6px 16px; border: 0; padding: 0; margin: 0; }
 .review-comment { min-height: 2.5em; }
+
+/* Mic button: hold to talk (default) or tap to start and stop. No long-press menu, text selection,
+   callout or scrolling gesture on the button, so a held finger stays a press. */
+.mic { display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.mic-button {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 1.15rem; font-weight: 700; padding: 16px 28px; border-radius: 999px;
+  background: var(--brand); border-color: var(--brand); color: #fff;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mic-button .mic-dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; opacity: 0.8; }
+.mic-button.pressed { filter: brightness(0.92); }
+.mic-button.recording { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 0 6px var(--danger-soft); }
+.mic-button.recording .mic-dot { animation: mic-blink 1s ease-in-out infinite; }
+.mic-button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+@keyframes mic-blink { 50% { opacity: 0.2; } }

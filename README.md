@@ -56,17 +56,59 @@ Never commit keys.
 
 ## How a visit flows
 
-1. [app/record/page.tsx](app/record/page.tsx) captures the mic, downsamples to 16 kHz PCM16 in
+1. The worker holds the mic button and speaks. [app/record/page.tsx](app/record/page.tsx) captures the
+   mic only while the button is held, downsamples to 16 kHz PCM16 in
    [public/pcm-worklet.js](public/pcm-worklet.js), and streams it to the speech service.
 2. [app/api/transcribe/route.ts](app/api/transcribe/route.ts) returns a short-lived streaming URL. With
    Sarvam, the browser connects to the relay ([scripts/stt-relay.ts](scripts/stt-relay.ts), deployed on
    Render by [render.yaml](render.yaml)), which holds the key. Vercel cannot hold WebSockets open.
-3. Each finished turn goes to [app/api/extract/route.ts](app/api/extract/route.ts), which extracts only
-   what that utterance stated, merges it into the record, and returns one question for the next gap.
-4. The browser speaks the question and mutes the mic while speaking.
-5. Once the required fields are present, the agent reads back a summary and saves the visit.
+3. On release, the browser sends `{"type":"ForceEndpoint"}`. The relay turns it into Sarvam's
+   `speech_end` and `flush`, so the final words come back at once as one turn.
+4. Each turn goes to [app/api/extract/route.ts](app/api/extract/route.ts), which extracts only what that
+   utterance stated, merges it into the record, and returns one question for the next gap.
+5. The browser speaks the question and mutes the mic while speaking.
+6. Once the required fields are present, the agent reads back a summary and saves the visit.
 
 Saying "that's wrong" or "galat hai" clears the last field filled and asks for it again.
+
+### The mic button
+
+The mic button, [lib/holdToTalk.ts](lib/holdToTalk.ts) and [app/record/MicButton.tsx](app/record/MicButton.tsx):
+
+- **Hold to talk (default).** Press and hold, or hold the spacebar while the button is focused. The
+  stream uses Sarvam's manual endpointing: the relay sends `speech_start` before the first audio of each
+  press and `speech_end` plus `flush` on release.
+- **Short presses.** A press under 300 ms is dropped with a hint, and nothing is sent.
+- **Ending a press.** Lifting the finger, a cancelled touch, or sliding off the button all end the press.
+- **Agent speaking.** Pressing while the agent is speaking stops the speech.
+- **Tap to start and stop.** Set in the "Mic" selector. One press starts and the next stops.
+- **No recording outside a press.** In both modes the microphone is released as soon as recording
+  stops. The setting is remembered on the device.
+
+### Languages: Hindi, English, Marwari
+
+The "Agent speaks" choice is remembered on the device. Everything the app says comes from
+[ui-text.json](ui-text.json), read with `t(id, lang)` from [lib/text.ts](lib/text.ts). Clinical text comes
+from the protocol and counselling files.
+
+- **Speech-to-text.** Saaras does not list Marwari, so Marwari mode transcribes as Hindi (`hi-IN`, never
+  auto-detect) with code-mixing.
+- **Text-to-speech.** Marwari text is Devanagari, so the Hindi voice speaks it.
+- **Marwari wording.**
+  - Every string can carry an optional `mwr` entry with `reviewed_by` and `reviewed_on`.
+  - Without that review, or with different `{placeholders}` from the Hindi, the Hindi is shown and
+    spoken instead.
+  - Advice entries switch to Marwari only when the title and every step are filled.
+  - The app writes no Marwari itself.
+- **Adding Marwari.**
+  1. A native speaker fills [marwari-todo.json](marwari-todo.json): one item per string, with its id,
+     where it appears, the English and the Hindi.
+  2. Run `node scripts/apply-marwari.ts marwari-todo.json`. It refuses a file without a reviewer name.
+  3. After changing any text, run `node scripts/marwari-todo.ts` to refresh the list (filled items are kept).
+- **Answer words.** Marwari yes, no and "don't know" words go in
+  [marwari-answers.json](marwari-answers.json), which starts empty. "Don't know" is checked first, so it
+  is never read as "no". Yes and no words count only when the Hindi and English words don't decide. The
+  app refuses to start if a word would change how a reference Hindi or English answer is read.
 
 Visits are linked to a patient register, and the visit is classified into a protocol (maternal ANC,
 child immunization, and so on) so only that protocol's fields are asked. The due-date engine in

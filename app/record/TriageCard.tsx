@@ -3,7 +3,9 @@
 import { useState } from "react";
 import type { TriageResponse } from "@/app/api/triage/route";
 import { COUNSELLING } from "@/lib/imnci/advice";
-import { adviceFor, adviceSpeech, entryVerification, visibleSteps } from "@/lib/imnci/counselling";
+import { adviceFor, adviceSpeech, appNotesOf, entryVerification, titleOf, visibleSteps } from "@/lib/imnci/counselling";
+import type { Lang } from "@/lib/i18n";
+import { t } from "@/lib/text";
 import { notAssessedLabels, type Outcome, type Verification } from "@/lib/imnci/rules";
 
 const OUTCOME: Record<Outcome, { label: string; band: string }> = {
@@ -33,7 +35,7 @@ export function TriageCard({
 }: {
   triage: TriageResponse;
   onEnd: () => void;
-  lang: "en" | "hi";
+  lang: Lang;
   onSpeak: (text: string) => Promise<void>; // the page's speak(): mutes the mic while talking
 }) {
   const { state, result, question } = triage;
@@ -67,7 +69,7 @@ export function TriageCard({
           {state.ageSource === "speech" && <>, from what you said (“{state.agePhrase}”)</>}
           {state.ageSource === "record" && <>, from the patient record</>}
           {state.ageSource === "answer" && <>, as you answered</>}
-          {!done && <span className="muted"> · Wrong age? Say “उम्र गलत है” / “age is wrong”.</span>}
+          {!done && <span className="muted"> · {t("ui.triage.wrong_age", lang)}</span>}
         </div>
       )}
 
@@ -104,23 +106,23 @@ export function TriageCard({
           {advice.length > 0 && (
             <section className="advice">
               <div className="row" style={{ justifyContent: "space-between" }}>
-                <h3 style={{ margin: 0 }}>{lang === "hi" ? "माँ को क्या बताएँ" : "What to tell the mother"}</h3>
+                <h3 style={{ margin: 0 }}>{t("ui.advice.heading", lang)}</h3>
                 <button onClick={readAloud} disabled={reading}>
-                  {reading ? (lang === "hi" ? "पढ़ रहे हैं…" : "Reading…") : lang === "hi" ? "पढ़कर सुनाइए" : "Read aloud"}
+                  {t(reading ? "ui.advice.reading" : "ui.advice.read", lang)}
                 </button>
               </div>
               {adviceNote && <div className="agent-msg warn small">{adviceNote}</div>}
               {advice.map((e) => (
                 <article key={e.id} className={`advice-entry${e.priority === "urgent" ? " urgent" : ""}`}>
-                  <strong>{lang === "hi" ? e.title_hi : e.title_en}</strong>
+                  <strong>{titleOf(e, lang)}</strong>
                   <ul>
                     {visibleSteps(e, lang).map((step, i) => (
                       <li key={i}>{step}</li>
                     ))}
                   </ul>
-                  {(e.app_notes ?? []).map((n, i) => (
+                  {appNotesOf(e, lang).map((note, i) => (
                     <p key={i} className="app-note small">
-                      <strong>App note, not from the booklet:</strong> {lang === "hi" ? n.hi : n.en}
+                      <strong>App note, not from the booklet:</strong> {note}
                     </p>
                   ))}
                   <p className="small muted">

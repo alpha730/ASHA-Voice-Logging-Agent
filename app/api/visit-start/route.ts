@@ -3,6 +3,7 @@ import { findPatient, visitsForPatient } from "@/lib/db";
 import { dueFor } from "@/lib/due";
 import { dueSummary } from "@/lib/schedule";
 import type { UiLang } from "@/lib/agent";
+import { toLang } from "@/lib/i18n";
 import type { DueItem, Patient } from "@/types/patient";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export interface VisitStartResponse {
 export async function POST(req: Request) {
   const body = await req.json();
   const name = typeof body.name === "string" ? body.name.trim() : "";
-  const lang: UiLang = body.lang === "en" ? "en" : "hi";
+  const lang: UiLang = toLang(body.lang);
   const today = body.today ?? new Date().toISOString().slice(0, 10);
   if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 });
 

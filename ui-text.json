@@ -1,0 +1,229 @@
+{
+  "_about": "Every sentence the app itself says or shows to the worker, in English and Hindi. 'mwr' (Marwari) is optional: { text, reviewed_by, reviewed_on }. It is used only when all three are present and its {placeholders} match the Hindi; otherwise the Hindi text is shown and spoken. Marwari is filled from marwari-todo.json by scripts/apply-marwari.ts, never by hand here.",
+  "texts": {
+    "agent.question.worker_name": {
+      "where": "Visit agent, when the worker's name is missing (lib/agent.ts)",
+      "en": "What is your name?",
+      "hi": "आपका नाम क्या है?"
+    },
+    "agent.question.household_id": {
+      "where": "Visit agent, when the household ID is missing (lib/agent.ts)",
+      "en": "What is the household ID?",
+      "hi": "घर का नंबर क्या है?"
+    },
+    "agent.question.health_findings": {
+      "where": "Visit agent, when no symptom or vital was recorded (lib/agent.ts)",
+      "en": "Did you record a temperature or any symptoms?",
+      "hi": "क्या आपने तापमान या कोई लक्षण नोट किया?"
+    },
+    "agent.question.follow_up_date": {
+      "where": "Visit agent, when the follow-up date is missing (lib/agent.ts)",
+      "en": "When is the next follow-up visit?",
+      "hi": "अगली विज़िट कब होगी?"
+    },
+    "agent.summary": {
+      "where": "Visit agent, read back once the visit is complete (lib/agent.ts). {who} is the patient or household, {noted} the findings, {date} the follow-up date.",
+      "en": "Logged: {who}, {noted}, follow-up on {date}.",
+      "hi": "लॉग हो गया: {who}, {noted}, अगली विज़िट {date}."
+    },
+    "agent.model_busy": {
+      "where": "Visit agent, when the language model was unavailable (app/api/extract/route.ts)",
+      "en": "The language model is busy, so only the simple reader was used. If something you said is missing, please say it again.",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए सिर्फ़ साधारण तरीके से पढ़ा गया। अगर आपकी कोई बात छूट गई हो, तो कृपया दोबारा बोलिए।"
+    },
+    "visit.due.overdue": {
+      "where": "Start of a visit, when something is overdue (lib/schedule.ts). {labels} is the list of vaccines or checkups.",
+      "en": "{name} is overdue for {labels}, by {days} days.",
+      "hi": "{name} के लिए {labels} बाकी है, {days} दिन से pending."
+    },
+    "visit.due.today": {
+      "where": "Start of a visit, when something is due today (lib/schedule.ts)",
+      "en": "{name} is due for {labels} today.",
+      "hi": "{name} के लिए आज {labels} due है।"
+    },
+    "protocol.maternal_anc.gestational_month": {
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "Which month of pregnancy is she in?",
+      "hi": "गर्भ का कौन-सा महीना चल रहा है?"
+    },
+    "protocol.maternal_anc.bp": {
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "What was her blood pressure?",
+      "hi": "उनका BP कितना था?"
+    },
+    "protocol.maternal_anc.weight_kg": {
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "What is her weight?",
+      "hi": "उनका वज़न कितना है?"
+    },
+    "protocol.maternal_anc.ifa_tablets_taken": {
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "Is she taking her IFA tablets?",
+      "hi": "क्या वे IFA की गोली ले रही हैं?"
+    },
+    "protocol.maternal_anc.danger_signs": {
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "Any danger signs, such as bleeding or swelling?",
+      "hi": "कोई ख़तरे का लक्षण, जैसे खून आना या सूजन?"
+    },
+    "protocol.maternal_anc.expected_delivery_date": {
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "What is the expected delivery date?",
+      "hi": "डिलीवरी की संभावित तारीख़ क्या है?"
+    },
+    "protocol.child_immunization.date_of_birth": {
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "What is the child's date of birth or age?",
+      "hi": "बच्चे की जन्म तारीख़ या उम्र क्या है?"
+    },
+    "protocol.child_immunization.vaccines_given": {
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "Which vaccines were given today?",
+      "hi": "आज कौन-सा टीका लगा?"
+    },
+    "protocol.child_immunization.weight_kg": {
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "What is the child's weight?",
+      "hi": "बच्चे का वज़न कितना है?"
+    },
+    "protocol.child_immunization.growth_concern": {
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "Any growth or nutrition concern?",
+      "hi": "बढ़त या पोषण की कोई चिंता?"
+    },
+    "triage.age_question": {
+      "where": "Sick-child assessment, asking the child's age (app/api/triage/route.ts)",
+      "en": "How old is the child, in months?",
+      "hi": "बच्चा कितने महीने का है?"
+    },
+    "triage.age_line": {
+      "where": "Sick-child assessment, before the first question when the age came from her sentence. {months} is a number.",
+      "en": "Taking the child's age as {months} months, from what you said. If that is wrong, say \"age is wrong\". ",
+      "hi": "आपकी बात से बच्चे की उम्र {months} महीने ली है। गलत हो तो कहिए \"उम्र गलत है\"। "
+    },
+    "triage.age_unclear": {
+      "where": "Sick-child assessment, when the age was unclear. {reason} is a short English reason, {question} the age question.",
+      "en": "I could not be sure of the age ({reason}). {question}",
+      "hi": "उम्र साफ़ नहीं हुई ({reason})। {question}"
+    },
+    "triage.again": {
+      "where": "Sick-child assessment, after \"galat hai\" reopens the last question. {question} is that question.",
+      "en": "OK, again: {question}",
+      "hi": "ठीक है, फिर से: {question}"
+    },
+    "triage.unclear": {
+      "where": "Sick-child assessment, when the answer was not understood. {question} is the question, {options} the choices.",
+      "en": "Sorry, I did not get that. {question}{options}",
+      "hi": "समझ नहीं आया। {question}{options}"
+    },
+    "triage.outcome.urgent_referral": {
+      "where": "Sick-child assessment, spoken result",
+      "en": "Urgent referral.",
+      "hi": "तुरंत refer कीजिए।"
+    },
+    "triage.outcome.refer": {
+      "where": "Sick-child assessment, spoken result",
+      "en": "Refer.",
+      "hi": "Refer कीजिए।"
+    },
+    "triage.outcome.treat_follow_up": {
+      "where": "Sick-child assessment, spoken result",
+      "en": "Treat and follow up.",
+      "hi": "इलाज और follow-up कीजिए।"
+    },
+    "triage.outcome.home_care": {
+      "where": "Sick-child assessment, spoken result",
+      "en": "Home care.",
+      "hi": "घर पर देखभाल।"
+    },
+    "triage.outcome.incomplete": {
+      "where": "Sick-child assessment, spoken result",
+      "en": "Assessment incomplete.",
+      "hi": "जाँच अधूरी है।"
+    },
+    "triage.outcome.not_applicable": {
+      "where": "Sick-child assessment, spoken result",
+      "en": "This assessment does not apply.",
+      "hi": "यह जाँच इस बच्चे पर लागू नहीं होती।"
+    },
+    "triage.out_of_range": {
+      "where": "Sick-child assessment not started because of the age (lib/imnci/flow.ts). {months} is a number.",
+      "en": "The child is {months} months old. This IMNCI assessment is only for children from 2 months up to 5 years, so it was not started.",
+      "hi": "बच्चा {months} महीने का है। यह IMNCI जाँच सिर्फ़ 2 महीने से 5 साल तक के बच्चों के लिए है, इसलिए शुरू नहीं की गई।"
+    },
+    "triage.out_of_range.young_infant": {
+      "where": "Added after triage.out_of_range for a baby under 2 months",
+      "en": " For a young infant under 2 months, use the young infant chart; this app does not cover it.",
+      "hi": " 2 महीने से छोटे शिशु के लिए young infant chart देखिए, यह app उसे नहीं करता।"
+    },
+    "triage.prompt.count": {
+      "where": "Sick-child assessment, wraps a counted measurement. {text} is the question.",
+      "en": "{text}, then tell me the number.",
+      "hi": "{text}। फिर नंबर बताइए।"
+    },
+    "triage.prompt.look": {
+      "where": "Sick-child assessment, wraps a sign she looks for. {text} is the observation.",
+      "en": "Please check: {text}",
+      "hi": "कृपया देखिए: {text}"
+    },
+    "triage.model_busy_start": {
+      "where": "Sick-child assessment, first question when the language model was down",
+      "en": "The language model is busy, so I will ask each question in turn. ",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए मैं हर सवाल एक-एक करके पूछूँगी। "
+    },
+    "triage.model_busy_repeat.yesno": {
+      "where": "Sick-child assessment, model down, asking a yes/no question again. {question} is the question.",
+      "en": "The language model is busy, so I could not read that answer. Please say it again and answer \"yes\" or \"no\". {question}",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए जवाब समझ नहीं आया। कृपया दोबारा, \"हाँ\" या \"नहीं\" में जवाब दीजिए। {question}"
+    },
+    "triage.model_busy_repeat.days": {
+      "where": "Sick-child assessment, model down, asking a number of days again. {question} is the question.",
+      "en": "The language model is busy, so I could not read that answer. Please say it again and say the number of days, for example \"3 days\". {question}",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए जवाब समझ नहीं आया। कृपया दोबारा, दिनों की संख्या बताइए, जैसे \"3 दिन\"। {question}"
+    },
+    "triage.group.skin_pinch": {
+      "where": "Sick-child assessment question written by the app (skin pinch, booklet page 10)",
+      "en": "Pinch the skin of the abdomen and let go. Does it go back very slowly (longer than 2 seconds), slowly, or immediately?",
+      "hi": "पेट की त्वचा चुटकी से पकड़कर छोड़िए। क्या वह बहुत धीरे (2 सेकंड से ज़्यादा में), धीरे, या तुरंत वापस जाती है?"
+    },
+    "triage.group.offer_fluid": {
+      "where": "Sick-child assessment question written by the app (offer fluid, booklet page 10)",
+      "en": "Offer the child fluid. Is the child not able to drink or drinking poorly, drinking eagerly and thirsty, or drinking normally?",
+      "hi": "बच्चे को पीने को दीजिए। क्या वह पी नहीं पा रहा या बहुत कम पी रहा है, प्यास से जल्दी-जल्दी पी रहा है, या सामान्य पी रहा है?"
+    },
+    "triage.choice.very_slow": { "where": "Answer choice read back to the worker", "en": "very slowly", "hi": "बहुत धीरे" },
+    "triage.choice.slow": { "where": "Answer choice read back to the worker", "en": "slowly", "hi": "धीरे" },
+    "triage.choice.immediately": { "where": "Answer choice read back to the worker", "en": "immediately", "hi": "तुरंत" },
+    "triage.choice.poorly": { "where": "Answer choice read back to the worker", "en": "not able or poorly", "hi": "नहीं पी पा रहा या कम" },
+    "triage.choice.eagerly": { "where": "Answer choice read back to the worker", "en": "eagerly, thirsty", "hi": "प्यास से जल्दी-जल्दी" },
+    "triage.choice.normally": { "where": "Answer choice read back to the worker", "en": "normally", "hi": "सामान्य" },
+    "triage.choice.severe": { "where": "Answer choice read back to the worker", "en": "severe", "hi": "बहुत ज़्यादा" },
+    "triage.choice.some": { "where": "Answer choice read back to the worker", "en": "some", "hi": "थोड़ी" },
+    "triage.choice.none": { "where": "Answer choice read back to the worker", "en": "none", "hi": "सामान्य" },
+    "triage.choice.below_minus_3sd": { "where": "Answer choice read back to the worker (MCP card colour)", "en": "red", "hi": "लाल" },
+    "triage.choice.minus_3_to_minus_2sd": { "where": "Answer choice read back to the worker (MCP card colour)", "en": "yellow", "hi": "पीला" },
+    "triage.choice.at_or_above_minus_2sd": { "where": "Answer choice read back to the worker (MCP card colour)", "en": "green", "hi": "हरा" },
+    "triage.choice.not_measured": { "where": "Answer choice read back to the worker", "en": "not measured", "hi": "नाप नहीं पाए" },
+    "triage.choice.positive": { "where": "Answer choice read back to the worker (RDT)", "en": "positive", "hi": "positive" },
+    "triage.choice.negative": { "where": "Answer choice read back to the worker (RDT)", "en": "negative", "hi": "negative" },
+    "triage.choice.not_available": { "where": "Answer choice read back to the worker (RDT)", "en": "not available", "hi": "उपलब्ध नहीं" },
+    "ui.hint.correction": {
+      "where": "Record page, under the title",
+      "en": "Speak naturally in Hindi, English, or both. Say “that’s wrong” to fix the last answer.",
+      "hi": "हिंदी, अंग्रेज़ी या दोनों में बोलिए। पिछला जवाब ठीक करने के लिए “गलत है” कहिए।"
+    },
+    "ui.triage.wrong_age": {
+      "where": "Sick-child card, next to the age",
+      "en": "Wrong age? Say “age is wrong”.",
+      "hi": "उम्र गलत है? कहिए “उम्र गलत है”।"
+    },
+    "ui.advice.heading": { "where": "Sick-child card, advice section heading", "en": "What to tell the mother", "hi": "माँ को क्या बताएँ" },
+    "ui.advice.read": { "where": "Sick-child card, button that reads the advice aloud", "en": "Read aloud", "hi": "पढ़कर सुनाइए" },
+    "ui.advice.reading": { "where": "Sick-child card, while the advice is read aloud", "en": "Reading…", "hi": "पढ़ रहे हैं…" },
+    "ui.mic.hold": { "where": "Record page, mic button in hold-to-talk mode", "en": "Hold to talk", "hi": "दबाकर रखिए और बोलिए" },
+    "ui.mic.recording": { "where": "Record page, mic button while recording", "en": "Recording… release to send", "hi": "रिकॉर्ड हो रहा है… छोड़ने पर भेजा जाएगा" },
+    "ui.mic.too_short": { "where": "Record page, after a press shorter than 300 ms", "en": "Hold to talk: keep the button pressed while you speak.", "hi": "बोलते समय बटन दबाकर रखिए।" },
+    "ui.mic.tap_start": { "where": "Record page, mic button in tap mode", "en": "Tap to start", "hi": "शुरू करने के लिए दबाइए" },
+    "ui.mic.tap_stop": { "where": "Record page, mic button in tap mode while recording", "en": "Recording… tap to stop", "hi": "रिकॉर्ड हो रहा है… रोकने के लिए दबाइए" }
+  }
+}

@@ -5,6 +5,7 @@
  * counselling.json; this file only checks it and picks the entries that match a result.
  */
 import { tablesFor, type Band, type CheckMethod, type ImnciProtocol, type Verification } from "./rules.ts";
+import { hasReview, type Lang } from "../i18n.ts";
 
 export type SourceDoc = "booklet" | "facilitator_guide";
 
@@ -31,12 +32,25 @@ export interface HeldStep {
   hold_reason: string;
   source_page: number;
   quote: string;
+  mwr?: string; // never shown or spoken while the step is held
 }
 
 /** Written by the app, not taken from a source. Shown labelled as such, never counted as verified. */
 export interface AppNote {
   en: string;
   hi: string;
+}
+
+/**
+ * Optional Marwari for a whole entry, filled by scripts/apply-marwari.ts. Used only when reviewed
+ * and complete (a title, every step, every app note); otherwise the Hindi entry is shown and spoken.
+ */
+export interface EntryMwr {
+  title: string;
+  steps: string[];
+  app_notes?: string[];
+  reviewed_by: string;
+  reviewed_on: string;
 }
 
 export interface CounsellingEntry {
@@ -56,6 +70,7 @@ export interface CounsellingEntry {
   held_steps?: HeldStep[];
   app_notes?: AppNote[];
   open_question?: string; // listed on the clinician review page
+  mwr?: EntryMwr | null;
 }
 
 export interface CounsellingFile {
@@ -98,10 +113,12 @@ export function validateCounselling(file: CounsellingFile, protocol: ImnciProtoc
     }
     for (const n of e.app_notes ?? []) {
       const extra = Object.keys(n).filter((k) => k !== "en" && k !== "hi");
+      // Marwari for an app note goes in the entry's mwr.app_notes, so a note never carries its own status.
       if (extra.length) errors.push(`${where}: an app note has only en and hi, never ${extra.join(", ")}; it is not source text`);
       if (!n.en?.trim() || !DEVANAGARI.test(n.hi ?? "")) errors.push(`${where}: an app note needs en and a Devanagari hi`);
     }
     if (e.open_question != null && !e.open_question.trim()) errors.push(`${where}: open_question is empty`);
+    if (e.mwr != null && (typeof e.mwr !== "object" || !Array.isArray(e.mwr.steps))) errors.push(`${where}: mwr must be { title, steps[], reviewed_by, reviewed_on }`);
 
     const check = e.source_check;
     if (check && !METHODS.includes(check.method)) errors.push(`${where}: unknown source_check method "${check.method}"`);
@@ -137,9 +154,36 @@ export function quotesOf(e: CounsellingEntry): { source: SourceDoc; page: number
   ];
 }
 
+/** The entry's Marwari, only when reviewed and complete. Otherwise null, and Hindi is used. */
+export function usableMwr(e: CounsellingEntry): EntryMwr | null {
+  const m = e.mwr;
+  if (!m || !hasReview(m)) return null;
+  const dev = (s: unknown) => typeof s === "string" && /[ऀ-ॿ]/.test(s);
+  if (!dev(m.title) || m.steps.length !== e.steps_en.length || !m.steps.every(dev)) return null;
+  if ((e.app_notes?.length ?? 0) !== (m.app_notes?.length ?? 0) || !(m.app_notes ?? []).every(dev)) return null;
+  return m;
+}
+
+/** Which language an entry is actually shown in. */
+export function entryLang(e: CounsellingEntry, lang: Lang): "en" | "hi" | "mwr" {
+  return lang === "en" ? "en" : lang === "mwr" && usableMwr(e) ? "mwr" : "hi";
+}
+
+export function titleOf(e: CounsellingEntry, lang: Lang): string {
+  const l = entryLang(e, lang);
+  return l === "mwr" ? usableMwr(e)!.title : l === "en" ? e.title_en : e.title_hi;
+}
+
 /** The steps shown and read aloud. Held steps are a separate field, so they never appear here. */
-export function visibleSteps(e: CounsellingEntry, lang: "en" | "hi"): string[] {
-  return lang === "hi" ? e.steps_hi : e.steps_en;
+export function visibleSteps(e: CounsellingEntry, lang: Lang): string[] {
+  const l = entryLang(e, lang);
+  return l === "mwr" ? usableMwr(e)!.steps : l === "en" ? e.steps_en : e.steps_hi;
+}
+
+export function appNotesOf(e: CounsellingEntry, lang: Lang): string[] {
+  const l = entryLang(e, lang);
+  if (l === "mwr") return usableMwr(e)!.app_notes ?? [];
+  return (e.app_notes ?? []).map((n) => (l === "en" ? n.en : n.hi));
 }
 
 /**
@@ -172,11 +216,6 @@ export function entryVerification(e: CounsellingEntry): Verification {
  * The text to read aloud: each title, its source steps, then its app notes, in one language. Held
  * steps are never read. App notes are read as plain advice; the card labels them as app notes.
  */
-export function adviceSpeech(entries: CounsellingEntry[], lang: "en" | "hi"): string {
-  return entries
-    .map((e) => {
-      const notes = (e.app_notes ?? []).map((n) => (lang === "hi" ? n.hi : n.en));
-      return `${lang === "hi" ? e.title_hi : e.title_en}: ${[...visibleSteps(e, lang), ...notes].join(" ")}`;
-    })
-    .join(" ");
+export function adviceSpeech(entries: CounsellingEntry[], lang: Lang): string {
+  return entries.map((e) => `${titleOf(e, lang)}: ${[...visibleSteps(e, lang), ...appNotesOf(e, lang)].join(" ")}`).join(" ");
 }

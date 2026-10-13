@@ -8,9 +8,9 @@
  * change items are left as they are and listed. Items the file does not mention are never touched.
  * A file without a reviewer name, or with items not in the current files, is refused.
  */
-import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { applyReview } from "../lib/imnci/review.ts";
+import { readJson as read, writeJson as write } from "./json-file.ts";
 
 function arg(name: string): string | null {
   const i = process.argv.indexOf(name);
@@ -27,12 +27,6 @@ const protocolPath = resolve(arg("--protocol") ?? `${root}/imnci-sick-child-2m-5
 const counsellingPath = resolve(arg("--counselling") ?? `${root}/counselling.json`);
 const dryRun = process.argv.includes("--dry-run");
 
-const read = (path: string) => JSON.parse(readFileSync(path, "utf8"));
-/** Write JSON in the file's own style (2-space indent, and its existing line endings), so the diff is only what changed. */
-function write(path: string, data: unknown) {
-  const eol = readFileSync(path, "utf8").includes("\r\n") ? "\r\n" : "\n";
-  writeFileSync(path, (JSON.stringify(data, null, 2) + "\n").replace(/\n/g, eol));
-}
 
 try {
   const { protocol, counselling, report } = applyReview(read(protocolPath), read(counsellingPath), read(exportPath));

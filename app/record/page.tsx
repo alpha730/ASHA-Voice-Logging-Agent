@@ -1,19 +1,25 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ExtractResponse } from "@/app/api/extract/route";
 import type { VisitStartResponse } from "@/app/api/visit-start/route";
 import type { TriageResponse, TriageState } from "@/app/api/triage/route";
+import { MicButton } from "./MicButton";
 import { TriageCard } from "./TriageCard";
 import type { UiLang } from "@/lib/agent";
 import { emptyVisit, missingFields, type ExtractedVisit, type RequiredField } from "@/types/visit";
 import type { DueItem, Patient, VisitProtocol } from "@/types/patient";
 import { pickVoice, splitBySpeechLang } from "@/lib/speech";
+import { createMicController, MIC_MODES, type MicController, type MicMode, type MicState, type Recorder } from "@/lib/holdToTalk";
+import { LANG_LABELS, LANGS } from "@/lib/i18n";
+import { browserStore, readSetting, SETTING_KEYS, writeSetting } from "@/lib/settings";
+import { t } from "@/lib/text";
 
 type Phase = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
 type AgentLine = { text: string; kind: "question" | "summary" | "info" | "warn" };
 
 const SAMPLE_RATE = 16000;
+const MAX_QUEUED = 400; // ~20 s of 50 ms frames waiting for the stream to open
 
 const FIELD_LABELS: Record<RequiredField, string> = {
   worker_name: "Worker",
@@ -82,7 +88,36 @@ export default function RecordPage() {
     triageStarted: false,
   });
   const ws = useRef<WebSocket | null>(null);
-  const audio = useRef<{ ctx: AudioContext; stream: MediaStream; node: AudioWorkletNode } | null>(null);
+  const sessionLang = useRef<UiLang | null>(null); // the language the open stream was started for
+  const sessionPending = useRef<Promise<void> | null>(null);
+  const outbox = useRef<(ArrayBuffer | string)[]>([]); // sent in order once the stream opens
+  // The microphone, only while the button is held: frames are held back until the press counts.
+  const capture = useRef({ token: 0, sending: false, held: [] as ArrayBuffer[], live: null as { stream: MediaStream; node: AudioWorkletNode } | null });
+  const audioCtx = useRef<AudioContext | null>(null);
+  const workletLoaded = useRef(false);
+  const mic = useRef<MicController | null>(null);
+  const recorderRef = useRef<Recorder>(null!);
+  const [micMode, setMicMode] = useState<MicMode>("hold");
+  const [micState, setMicState] = useState<MicState>("idle");
+  const [micHint, setMicHint] = useState<"too_short" | null>(null);
+
+  // Settings remembered on this device.
+  useEffect(() => {
+    const store = browserStore();
+    setLang(readSetting(store, SETTING_KEYS.lang, LANGS, "hi"));
+    setMicMode(readSetting(store, SETTING_KEYS.micMode, MIC_MODES, "hold"));
+  }, []);
+  const chooseLang = (next: UiLang) => {
+    setLang(next);
+    writeSetting(browserStore(), SETTING_KEYS.lang, next);
+  };
+  const chooseMicMode = (next: MicMode) => {
+    setMicMode(next);
+    writeSetting(browserStore(), SETTING_KEYS.micMode, next);
+  };
+  useEffect(() => {
+    mic.current?.setMode(micMode);
+  }, [micMode]);
 
   useEffect(() => {
     s.current.lang = lang;
@@ -292,78 +327,188 @@ export default function RecordPage() {
     [handleTurn],
   );
 
-  const stop = useCallback(() => {
-    try {
-      if (ws.current?.readyState === WebSocket.OPEN) ws.current.send(JSON.stringify({ type: "Terminate" }));
-    } catch {}
-    ws.current?.close();
-    ws.current = null;
-    if (audio.current) {
-      audio.current.node.disconnect();
-      audio.current.stream.getTracks().forEach((t) => t.stop());
-      audio.current.ctx.close();
-      audio.current = null;
+  /** Send now if the stream is open, otherwise keep it, in order, for when it opens. */
+  const sendOrQueue = useCallback((msg: ArrayBuffer | string) => {
+    const socket = ws.current;
+    if (socket?.readyState === WebSocket.OPEN) socket.send(msg);
+    else if (outbox.current.length < MAX_QUEUED) outbox.current.push(msg);
+  }, []);
+
+  /** Release the microphone. Frames still on their way from the worklet are dropped. */
+  const stopCapture = useCallback(() => {
+    capture.current.token++;
+    const c = capture.current.live;
+    if (c) {
+      c.node.port.onmessage = null;
+      c.node.disconnect();
+      c.stream.getTracks().forEach((tr) => tr.stop());
     }
+    capture.current.live = null;
+    capture.current.sending = false;
+    capture.current.held = [];
+  }, []);
+
+  /** Close the speech-to-text stream only. The next press opens a new one. */
+  const closeSocket = useCallback(() => {
+    const socket = ws.current;
+    ws.current = null;
+    outbox.current = [];
+    try {
+      if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "Terminate" }));
+    } catch {}
+    socket?.close();
     setPartial("");
     setPhase("idle");
   }, []);
 
-  const start = useCallback(async () => {
+  /** End any press in progress, release the microphone and close the stream. */
+  const closeSession = useCallback(() => {
+    mic.current?.stop();
+    stopCapture();
+    closeSocket();
+  }, [closeSocket, stopCapture]);
+
+  /**
+   * Open the stream once and keep it for the visit. It carries audio only while the button is held;
+   * hold-to-talk uses manual endpointing, so each release ends one utterance.
+   */
+  const openSession = useCallback(async () => {
+    // The language changed since the stream opened (Marwari is transcribed as hi-IN): reopen it,
+    // keeping the press in progress and the audio waiting in the outbox.
+    if (ws.current) {
+      const queued = outbox.current;
+      closeSocket();
+      outbox.current = queued;
+    }
+    sessionLang.current = s.current.lang;
     setError(null);
     setPhase("connecting");
-    try {
-      const tokenRes = await fetch(`/api/transcribe?sample_rate=${SAMPLE_RATE}`);
-      const { url, error } = await tokenRes.json();
-      if (!tokenRes.ok) throw new Error(error ?? "Could not get a transcription token");
+    const query = new URLSearchParams({ sample_rate: String(SAMPLE_RATE), lang: s.current.lang, endpointing: "manual" });
+    const tokenRes = await fetch(`/api/transcribe?${query}`);
+    const { url, error } = await tokenRes.json();
+    if (!tokenRes.ok) throw new Error(error ?? "Could not get a transcription token");
+    const socket = new WebSocket(url);
+    socket.binaryType = "arraybuffer";
+    ws.current = socket;
+    socket.onopen = () => {
+      for (const msg of outbox.current.splice(0)) socket.send(msg);
+      setPhase((p) => (p === "connecting" ? "listening" : p));
+    };
+    socket.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "Turn") {
+        if (msg.end_of_turn && msg.turn_is_formatted) {
+          setPartial("");
+          enqueueTurn(msg.transcript, msg.language_code ?? null);
+        } else if (!msg.end_of_turn) {
+          setPartial(msg.transcript ?? "");
+        }
+      } else if (msg.type === "Error" || msg.error) {
+        setError(msg.error ?? JSON.stringify(msg));
+      }
+    };
+    socket.onerror = () => setError("Streaming connection error");
+    socket.onclose = (e) => {
+      if (ws.current === socket) {
+        if (e.code !== 1000 && e.reason) setError(`Stream closed: ${e.reason}`);
+        closeSession();
+      }
+    };
+  }, [closeSession, closeSocket, enqueueTurn]);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      });
-      const ctx = new AudioContext();
-      await ctx.audioWorklet.addModule("/pcm-worklet.js");
-      const source = ctx.createMediaStreamSource(stream);
-      const node = new AudioWorkletNode(ctx, "pcm-worklet", { processorOptions: { targetRate: SAMPLE_RATE } });
-      source.connect(node);
-      audio.current = { ctx, stream, node };
+  const ensureSession = useCallback((): Promise<void> => {
+    const open = ws.current && (ws.current.readyState === WebSocket.OPEN || ws.current.readyState === WebSocket.CONNECTING);
+    if (open && sessionLang.current === s.current.lang) return Promise.resolve();
+    // A press while the stream is still being set up waits for that one instead of opening another.
+    if (sessionPending.current) return sessionPending.current;
+    sessionPending.current = openSession().finally(() => {
+      sessionPending.current = null;
+    });
+    return sessionPending.current;
+  }, [openSession]);
 
-      const socket = new WebSocket(url);
-      socket.binaryType = "arraybuffer";
-      ws.current = socket;
-      node.port.onmessage = (e) => {
-        if (socket.readyState === WebSocket.OPEN && !s.current.speaking) socket.send(e.data);
-      };
-      socket.onopen = () => setPhase("listening");
-      socket.onmessage = (e) => {
-        const msg = JSON.parse(e.data);
-        if (msg.type === "Turn") {
-          if (msg.end_of_turn && msg.turn_is_formatted) {
-            setPartial("");
-            enqueueTurn(msg.transcript, msg.language_code ?? null);
-          } else if (!msg.end_of_turn) {
-            setPartial(msg.transcript ?? "");
+  /** The microphone side of the mic button. Nothing is captured or sent outside a press. */
+  const recorder = useMemo<Recorder>(
+    () => ({
+      begin() {
+        const token = ++capture.current.token;
+        capture.current.held = [];
+        capture.current.sending = false;
+        ensureSession().catch((err) => {
+          setError((err as Error).message);
+          mic.current?.stop();
+        });
+        (async () => {
+          const ctx = (audioCtx.current ??= new AudioContext());
+          await ctx.resume();
+          if (!workletLoaded.current) {
+            await ctx.audioWorklet.addModule("/pcm-worklet.js");
+            workletLoaded.current = true;
           }
-        } else if (msg.type === "Error" || msg.error) {
-          setError(msg.error ?? JSON.stringify(msg));
-        }
-      };
-      socket.onerror = () => setError("Streaming connection error");
-      socket.onclose = (e) => {
-        if (ws.current === socket) {
-          if (e.code !== 1000 && e.reason) setError(`Stream closed: ${e.reason}`);
-          stop();
-        }
-      };
-    } catch (err) {
-      setError((err as Error).message);
-      stop();
-      setPhase("error");
-    }
-  }, [enqueueTurn, stop]);
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          });
+          // Released (or discarded) while the microphone was starting: let it go at once.
+          if (token !== capture.current.token) return stream.getTracks().forEach((tr) => tr.stop());
+          const node = new AudioWorkletNode(ctx, "pcm-worklet", { processorOptions: { targetRate: SAMPLE_RATE } });
+          ctx.createMediaStreamSource(stream).connect(node);
+          node.port.onmessage = (e) => {
+            if (s.current.speaking) return; // never send the agent's own voice
+            if (capture.current.sending) sendOrQueue(e.data);
+            else capture.current.held.push(e.data);
+          };
+          capture.current.live = { stream, node };
+        })().catch((err) => {
+          setError((err as Error).message);
+          mic.current?.stop();
+        });
+      },
+      open() {
+        capture.current.sending = true;
+        for (const frame of capture.current.held.splice(0)) sendOrQueue(frame);
+      },
+      finish() {
+        stopCapture();
+        // Tells the speech service the utterance is over, so the last words are transcribed now.
+        sendOrQueue(JSON.stringify({ type: "ForceEndpoint" }));
+      },
+      discard() {
+        stopCapture();
+      },
+    }),
+    [ensureSession, sendOrQueue, stopCapture],
+  );
 
-  useEffect(() => stop, [stop]);
+  if (!mic.current) {
+    mic.current = createMicController(
+      {
+        recorder: { begin: () => recorderRef.current.begin(), open: () => recorderRef.current.open(), finish: () => recorderRef.current.finish(), discard: () => recorderRef.current.discard() },
+        agentSpeaking: () => s.current.speaking,
+        cancelSpeech: () => {
+          speechSynthesis?.cancel();
+          s.current.speaking = false;
+          setPhase((p) => (p === "speaking" ? "listening" : p));
+        },
+        setTimer: (fn, ms) => window.setTimeout(fn, ms),
+        clearTimer: (h) => window.clearTimeout(h as number),
+        onState: setMicState,
+        onHint: setMicHint,
+      },
+      "hold",
+    );
+  }
+  recorderRef.current = recorder;
+
+  useEffect(
+    () => () => {
+      closeSession();
+      audioCtx.current?.close();
+    },
+    [closeSession],
+  );
 
   const reset = () => {
-    stop();
+    closeSession();
     speechSynthesis?.cancel();
     s.current = {
       ...s.current,
@@ -446,27 +591,31 @@ export default function RecordPage() {
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <h1>Record a home visit</h1>
-          <p className="muted small">Speak naturally in Hindi, English, or both. Say “that’s wrong” / “गलत है” to fix the last answer.</p>
+          <p className="muted small">{t("ui.hint.correction", lang)}</p>
         </div>
         <div className="row">
           <span className="small muted">Agent speaks</span>
           <div className="toggle" role="group" aria-label="Agent language">
-            <button className={lang === "hi" ? "on" : ""} onClick={() => setLang("hi")}>हिन्दी</button>
-            <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>English</button>
+            {LANGS.map((l) => (
+              <button key={l} className={lang === l ? "on" : ""} aria-pressed={lang === l} onClick={() => chooseLang(l)}>
+                {LANG_LABELS[l]}
+              </button>
+            ))}
           </div>
           {detected && <span className="badge lang">Detected: {detected}</span>}
         </div>
       </div>
 
       <div className="row">
-        {!live ? (
-          <button className="primary big" onClick={start} disabled={phase === "connecting"}>
-            {phase === "connecting" ? "Connecting…" : turns.length ? "Continue visit" : "Start visit"}
-          </button>
-        ) : (
-          <button className="danger big" onClick={stop}>Stop</button>
-        )}
+        {mic.current && <MicButton mic={mic.current} mode={micMode} state={micState} lang={lang} hint={micHint} />}
         <button onClick={reset}>New visit</button>
+        <label className="row small muted">
+          Mic
+          <select value={micMode} onChange={(e) => chooseMicMode(e.target.value as MicMode)}>
+            <option value="hold">Hold to talk</option>
+            <option value="tap">Tap to start and stop</option>
+          </select>
+        </label>
         <label className="row small muted">
           Worker ID
           <input type="text" value={workerId} onChange={(e) => setWorkerId(e.target.value)} style={{ width: 120 }} placeholder="ASHA-017" />

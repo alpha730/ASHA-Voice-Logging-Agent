@@ -43,6 +43,15 @@ export interface ProtocolItem {
   values?: string[];
   range?: [number, number];
   ask_if?: Condition; // only asked once this holds
+  mwr?: ClinicalMwr | null; // Marwari question or observation; used only once reviewed
+}
+
+/** Optional Marwari for a protocol question, filled by scripts/apply-marwari.ts. */
+export interface ClinicalMwr {
+  question?: string;
+  observation?: string;
+  reviewed_by?: string;
+  reviewed_on?: string;
 }
 
 export interface ProtocolClassification {
@@ -74,7 +83,7 @@ export interface ProtocolAssessment {
   id: string;
   title: string;
   source_page: string;
-  trigger?: { question_en: string; question_hi?: string };
+  trigger?: { question_en: string; question_hi?: string; mwr?: ClinicalMwr | null };
   ask?: ProtocolItem[];
   look?: ProtocolItem[];
   derived?: {

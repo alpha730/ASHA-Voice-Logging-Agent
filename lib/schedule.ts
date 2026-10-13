@@ -1,4 +1,6 @@
 import type { DueItem, DueStatus } from "@/types/patient";
+import type { Lang } from "./i18n.ts";
+import { t } from "./text.ts";
 
 /**
  * Due-date engine. Pure date arithmetic against India's National Immunization Schedule
@@ -152,18 +154,13 @@ export function ancDue(edd: string, today: string, done: string[] = []): DueItem
 // ---------------------------------------------------------------------------
 
 /** One short line the agent says at the START of a visit, before asking anything. */
-export function dueSummary(name: string, items: DueItem[], lang: "hi" | "en"): string | null {
+export function dueSummary(name: string, items: DueItem[], lang: Lang): string | null {
   const actionable = items.filter((i) => i.status !== "upcoming");
   if (!actionable.length) return null;
   const overdue = actionable.filter((i) => i.status === "overdue");
   const labels = actionable.slice(0, 3).map((i) => i.label).join(", ");
   const more = actionable.length > 3 ? ` and ${actionable.length - 3} more` : "";
-  if (lang === "hi") {
-    return overdue.length
-      ? `${name} के लिए ${labels}${more} बाकी है, ${Math.abs(overdue[0].days)} दिन से pending.`
-      : `${name} के लिए आज ${labels}${more} due है।`;
-  }
   return overdue.length
-    ? `${name} is overdue for ${labels}${more}, by ${Math.abs(overdue[0].days)} days.`
-    : `${name} is due for ${labels}${more} today.`;
+    ? t("visit.due.overdue", lang, { name, labels: `${labels}${more}`, days: Math.abs(overdue[0].days) })
+    : t("visit.due.today", lang, { name, labels: `${labels}${more}` });
 }

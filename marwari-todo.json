@@ -1,0 +1,1390 @@
+{
+  "_about": "Marwari for every sentence the app says or shows. Fill 'mwr' in Devanagari for each item, keep every {placeholder} exactly as written, and leave 'mwr' empty where you are unsure: those items stay in Hindi. Put your name in 'reviewer' and the date in 'reviewed_on' (YYYY-MM-DD), then run: node scripts/apply-marwari.ts marwari-todo.json. Advice entries ('counselling:...') are used only when the title and every step of the entry are filled.",
+  "reviewer": "",
+  "reviewed_on": "",
+  "items": [
+    {
+      "id": "ui:agent.question.worker_name",
+      "where": "Visit agent, when the worker's name is missing (lib/agent.ts)",
+      "en": "What is your name?",
+      "hi": "आपका नाम क्या है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:agent.question.household_id",
+      "where": "Visit agent, when the household ID is missing (lib/agent.ts)",
+      "en": "What is the household ID?",
+      "hi": "घर का नंबर क्या है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:agent.question.health_findings",
+      "where": "Visit agent, when no symptom or vital was recorded (lib/agent.ts)",
+      "en": "Did you record a temperature or any symptoms?",
+      "hi": "क्या आपने तापमान या कोई लक्षण नोट किया?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:agent.question.follow_up_date",
+      "where": "Visit agent, when the follow-up date is missing (lib/agent.ts)",
+      "en": "When is the next follow-up visit?",
+      "hi": "अगली विज़िट कब होगी?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:agent.summary",
+      "where": "Visit agent, read back once the visit is complete (lib/agent.ts). {who} is the patient or household, {noted} the findings, {date} the follow-up date.",
+      "en": "Logged: {who}, {noted}, follow-up on {date}.",
+      "hi": "लॉग हो गया: {who}, {noted}, अगली विज़िट {date}.",
+      "placeholders": [
+        "date",
+        "noted",
+        "who"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:agent.model_busy",
+      "where": "Visit agent, when the language model was unavailable (app/api/extract/route.ts)",
+      "en": "The language model is busy, so only the simple reader was used. If something you said is missing, please say it again.",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए सिर्फ़ साधारण तरीके से पढ़ा गया। अगर आपकी कोई बात छूट गई हो, तो कृपया दोबारा बोलिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:visit.due.overdue",
+      "where": "Start of a visit, when something is overdue (lib/schedule.ts). {labels} is the list of vaccines or checkups.",
+      "en": "{name} is overdue for {labels}, by {days} days.",
+      "hi": "{name} के लिए {labels} बाकी है, {days} दिन से pending.",
+      "placeholders": [
+        "days",
+        "labels",
+        "name"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:visit.due.today",
+      "where": "Start of a visit, when something is due today (lib/schedule.ts)",
+      "en": "{name} is due for {labels} today.",
+      "hi": "{name} के लिए आज {labels} due है।",
+      "placeholders": [
+        "labels",
+        "name"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.maternal_anc.gestational_month",
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "Which month of pregnancy is she in?",
+      "hi": "गर्भ का कौन-सा महीना चल रहा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.maternal_anc.bp",
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "What was her blood pressure?",
+      "hi": "उनका BP कितना था?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.maternal_anc.weight_kg",
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "What is her weight?",
+      "hi": "उनका वज़न कितना है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.maternal_anc.ifa_tablets_taken",
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "Is she taking her IFA tablets?",
+      "hi": "क्या वे IFA की गोली ले रही हैं?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.maternal_anc.danger_signs",
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "Any danger signs, such as bleeding or swelling?",
+      "hi": "कोई ख़तरे का लक्षण, जैसे खून आना या सूजन?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.maternal_anc.expected_delivery_date",
+      "where": "Maternal/ANC visit question (lib/protocols.ts)",
+      "en": "What is the expected delivery date?",
+      "hi": "डिलीवरी की संभावित तारीख़ क्या है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.child_immunization.date_of_birth",
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "What is the child's date of birth or age?",
+      "hi": "बच्चे की जन्म तारीख़ या उम्र क्या है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.child_immunization.vaccines_given",
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "Which vaccines were given today?",
+      "hi": "आज कौन-सा टीका लगा?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.child_immunization.weight_kg",
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "What is the child's weight?",
+      "hi": "बच्चे का वज़न कितना है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:protocol.child_immunization.growth_concern",
+      "where": "Child immunization visit question (lib/protocols.ts)",
+      "en": "Any growth or nutrition concern?",
+      "hi": "बढ़त या पोषण की कोई चिंता?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.age_question",
+      "where": "Sick-child assessment, asking the child's age (app/api/triage/route.ts)",
+      "en": "How old is the child, in months?",
+      "hi": "बच्चा कितने महीने का है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.age_line",
+      "where": "Sick-child assessment, before the first question when the age came from her sentence. {months} is a number.",
+      "en": "Taking the child's age as {months} months, from what you said. If that is wrong, say \"age is wrong\". ",
+      "hi": "आपकी बात से बच्चे की उम्र {months} महीने ली है। गलत हो तो कहिए \"उम्र गलत है\"। ",
+      "placeholders": [
+        "months"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.age_unclear",
+      "where": "Sick-child assessment, when the age was unclear. {reason} is a short English reason, {question} the age question.",
+      "en": "I could not be sure of the age ({reason}). {question}",
+      "hi": "उम्र साफ़ नहीं हुई ({reason})। {question}",
+      "placeholders": [
+        "question",
+        "reason"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.again",
+      "where": "Sick-child assessment, after \"galat hai\" reopens the last question. {question} is that question.",
+      "en": "OK, again: {question}",
+      "hi": "ठीक है, फिर से: {question}",
+      "placeholders": [
+        "question"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.unclear",
+      "where": "Sick-child assessment, when the answer was not understood. {question} is the question, {options} the choices.",
+      "en": "Sorry, I did not get that. {question}{options}",
+      "hi": "समझ नहीं आया। {question}{options}",
+      "placeholders": [
+        "options",
+        "question"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.outcome.urgent_referral",
+      "where": "Sick-child assessment, spoken result",
+      "en": "Urgent referral.",
+      "hi": "तुरंत refer कीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.outcome.refer",
+      "where": "Sick-child assessment, spoken result",
+      "en": "Refer.",
+      "hi": "Refer कीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.outcome.treat_follow_up",
+      "where": "Sick-child assessment, spoken result",
+      "en": "Treat and follow up.",
+      "hi": "इलाज और follow-up कीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.outcome.home_care",
+      "where": "Sick-child assessment, spoken result",
+      "en": "Home care.",
+      "hi": "घर पर देखभाल।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.outcome.incomplete",
+      "where": "Sick-child assessment, spoken result",
+      "en": "Assessment incomplete.",
+      "hi": "जाँच अधूरी है।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.outcome.not_applicable",
+      "where": "Sick-child assessment, spoken result",
+      "en": "This assessment does not apply.",
+      "hi": "यह जाँच इस बच्चे पर लागू नहीं होती।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.out_of_range",
+      "where": "Sick-child assessment not started because of the age (lib/imnci/flow.ts). {months} is a number.",
+      "en": "The child is {months} months old. This IMNCI assessment is only for children from 2 months up to 5 years, so it was not started.",
+      "hi": "बच्चा {months} महीने का है। यह IMNCI जाँच सिर्फ़ 2 महीने से 5 साल तक के बच्चों के लिए है, इसलिए शुरू नहीं की गई।",
+      "placeholders": [
+        "months"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.out_of_range.young_infant",
+      "where": "Added after triage.out_of_range for a baby under 2 months",
+      "en": " For a young infant under 2 months, use the young infant chart; this app does not cover it.",
+      "hi": " 2 महीने से छोटे शिशु के लिए young infant chart देखिए, यह app उसे नहीं करता।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.prompt.count",
+      "where": "Sick-child assessment, wraps a counted measurement. {text} is the question.",
+      "en": "{text}, then tell me the number.",
+      "hi": "{text}। फिर नंबर बताइए।",
+      "placeholders": [
+        "text"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.prompt.look",
+      "where": "Sick-child assessment, wraps a sign she looks for. {text} is the observation.",
+      "en": "Please check: {text}",
+      "hi": "कृपया देखिए: {text}",
+      "placeholders": [
+        "text"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.model_busy_start",
+      "where": "Sick-child assessment, first question when the language model was down",
+      "en": "The language model is busy, so I will ask each question in turn. ",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए मैं हर सवाल एक-एक करके पूछूँगी। ",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.model_busy_repeat.yesno",
+      "where": "Sick-child assessment, model down, asking a yes/no question again. {question} is the question.",
+      "en": "The language model is busy, so I could not read that answer. Please say it again and answer \"yes\" or \"no\". {question}",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए जवाब समझ नहीं आया। कृपया दोबारा, \"हाँ\" या \"नहीं\" में जवाब दीजिए। {question}",
+      "placeholders": [
+        "question"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.model_busy_repeat.days",
+      "where": "Sick-child assessment, model down, asking a number of days again. {question} is the question.",
+      "en": "The language model is busy, so I could not read that answer. Please say it again and say the number of days, for example \"3 days\". {question}",
+      "hi": "भाषा मॉडल अभी व्यस्त है, इसलिए जवाब समझ नहीं आया। कृपया दोबारा, दिनों की संख्या बताइए, जैसे \"3 दिन\"। {question}",
+      "placeholders": [
+        "question"
+      ],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.group.skin_pinch",
+      "where": "Sick-child assessment question written by the app (skin pinch, booklet page 10)",
+      "en": "Pinch the skin of the abdomen and let go. Does it go back very slowly (longer than 2 seconds), slowly, or immediately?",
+      "hi": "पेट की त्वचा चुटकी से पकड़कर छोड़िए। क्या वह बहुत धीरे (2 सेकंड से ज़्यादा में), धीरे, या तुरंत वापस जाती है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.group.offer_fluid",
+      "where": "Sick-child assessment question written by the app (offer fluid, booklet page 10)",
+      "en": "Offer the child fluid. Is the child not able to drink or drinking poorly, drinking eagerly and thirsty, or drinking normally?",
+      "hi": "बच्चे को पीने को दीजिए। क्या वह पी नहीं पा रहा या बहुत कम पी रहा है, प्यास से जल्दी-जल्दी पी रहा है, या सामान्य पी रहा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.very_slow",
+      "where": "Answer choice read back to the worker",
+      "en": "very slowly",
+      "hi": "बहुत धीरे",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.slow",
+      "where": "Answer choice read back to the worker",
+      "en": "slowly",
+      "hi": "धीरे",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.immediately",
+      "where": "Answer choice read back to the worker",
+      "en": "immediately",
+      "hi": "तुरंत",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.poorly",
+      "where": "Answer choice read back to the worker",
+      "en": "not able or poorly",
+      "hi": "नहीं पी पा रहा या कम",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.eagerly",
+      "where": "Answer choice read back to the worker",
+      "en": "eagerly, thirsty",
+      "hi": "प्यास से जल्दी-जल्दी",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.normally",
+      "where": "Answer choice read back to the worker",
+      "en": "normally",
+      "hi": "सामान्य",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.severe",
+      "where": "Answer choice read back to the worker",
+      "en": "severe",
+      "hi": "बहुत ज़्यादा",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.some",
+      "where": "Answer choice read back to the worker",
+      "en": "some",
+      "hi": "थोड़ी",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.none",
+      "where": "Answer choice read back to the worker",
+      "en": "none",
+      "hi": "सामान्य",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.below_minus_3sd",
+      "where": "Answer choice read back to the worker (MCP card colour)",
+      "en": "red",
+      "hi": "लाल",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.minus_3_to_minus_2sd",
+      "where": "Answer choice read back to the worker (MCP card colour)",
+      "en": "yellow",
+      "hi": "पीला",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.at_or_above_minus_2sd",
+      "where": "Answer choice read back to the worker (MCP card colour)",
+      "en": "green",
+      "hi": "हरा",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.not_measured",
+      "where": "Answer choice read back to the worker",
+      "en": "not measured",
+      "hi": "नाप नहीं पाए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.positive",
+      "where": "Answer choice read back to the worker (RDT)",
+      "en": "positive",
+      "hi": "positive",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.negative",
+      "where": "Answer choice read back to the worker (RDT)",
+      "en": "negative",
+      "hi": "negative",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:triage.choice.not_available",
+      "where": "Answer choice read back to the worker (RDT)",
+      "en": "not available",
+      "hi": "उपलब्ध नहीं",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.hint.correction",
+      "where": "Record page, under the title",
+      "en": "Speak naturally in Hindi, English, or both. Say “that’s wrong” to fix the last answer.",
+      "hi": "हिंदी, अंग्रेज़ी या दोनों में बोलिए। पिछला जवाब ठीक करने के लिए “गलत है” कहिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.triage.wrong_age",
+      "where": "Sick-child card, next to the age",
+      "en": "Wrong age? Say “age is wrong”.",
+      "hi": "उम्र गलत है? कहिए “उम्र गलत है”।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.advice.heading",
+      "where": "Sick-child card, advice section heading",
+      "en": "What to tell the mother",
+      "hi": "माँ को क्या बताएँ",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.advice.read",
+      "where": "Sick-child card, button that reads the advice aloud",
+      "en": "Read aloud",
+      "hi": "पढ़कर सुनाइए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.advice.reading",
+      "where": "Sick-child card, while the advice is read aloud",
+      "en": "Reading…",
+      "hi": "पढ़ रहे हैं…",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.mic.hold",
+      "where": "Record page, mic button in hold-to-talk mode",
+      "en": "Hold to talk",
+      "hi": "दबाकर रखिए और बोलिए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.mic.recording",
+      "where": "Record page, mic button while recording",
+      "en": "Recording… release to send",
+      "hi": "रिकॉर्ड हो रहा है… छोड़ने पर भेजा जाएगा",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.mic.too_short",
+      "where": "Record page, after a press shorter than 300 ms",
+      "en": "Hold to talk: keep the button pressed while you speak.",
+      "hi": "बोलते समय बटन दबाकर रखिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.mic.tap_start",
+      "where": "Record page, mic button in tap mode",
+      "en": "Tap to start",
+      "hi": "शुरू करने के लिए दबाइए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "ui:ui.mic.tap_stop",
+      "where": "Record page, mic button in tap mode while recording",
+      "en": "Recording… tap to stop",
+      "hi": "रिकॉर्ड हो रहा है… रोकने के लिए दबाइए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:unable_to_drink",
+      "where": "Sick-child assessment, general danger signs (question)",
+      "en": "Is the child able to drink or feed?",
+      "hi": "क्या बच्चा पी या खा पा रहा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:vomits_everything",
+      "where": "Sick-child assessment, general danger signs (question)",
+      "en": "Does the child vomit everything?",
+      "hi": "क्या बच्चा जो भी खाता-पीता है, सब उल्टी कर देता है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:convulsions",
+      "where": "Sick-child assessment, general danger signs (question)",
+      "en": "Has the child had convulsions?",
+      "hi": "क्या बच्चे को झटके या दौरे आए हैं?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:lethargic_unconscious",
+      "where": "Sick-child assessment, general danger signs (observation)",
+      "en": "See if the child is lethargic or unconscious",
+      "hi": "क्या बच्चा सुस्त है या बेहोश है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:convulsing_now",
+      "where": "Sick-child assessment, general danger signs (observation)",
+      "en": "Is the child convulsing now?",
+      "hi": "क्या बच्चे को अभी झटके आ रहे हैं?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:cough_duration_days",
+      "where": "Sick-child assessment, Cough or difficult breathing (question)",
+      "en": "For how long?",
+      "hi": "खाँसी कितने दिनों से है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:respiratory_rate",
+      "where": "Sick-child assessment, Cough or difficult breathing (observation)",
+      "en": "Count the breaths in one minute",
+      "hi": "एक मिनट तक बच्चे की साँसें गिनिए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:chest_indrawing",
+      "where": "Sick-child assessment, Cough or difficult breathing (observation)",
+      "en": "Look for chest indrawing",
+      "hi": "साँस लेते समय क्या बच्चे की छाती नीचे की ओर धँसती है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:oxygen_saturation",
+      "where": "Sick-child assessment, Cough or difficult breathing (observation)",
+      "en": "Check oxygen saturation with the pulse oximeter. What is the reading in percent?",
+      "hi": "Pulse oximeter से oxygen saturation देखिए। कितने प्रतिशत है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:diarrhoea_duration_days",
+      "where": "Sick-child assessment, Diarrhoea (question)",
+      "en": "For how long?",
+      "hi": "दस्त कितने दिनों से हैं?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:blood_in_stool",
+      "where": "Sick-child assessment, Diarrhoea (question)",
+      "en": "Is there blood in the stool?",
+      "hi": "क्या दस्त में खून आ रहा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:restless_irritable",
+      "where": "Sick-child assessment, Diarrhoea (observation)",
+      "en": "Is the child restless and irritable?",
+      "hi": "क्या बच्चा बेचैन है या चिड़चिड़ा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:sunken_eyes",
+      "where": "Sick-child assessment, Diarrhoea (observation)",
+      "en": "Look for sunken eyes",
+      "hi": "क्या बच्चे की आँखें धँसी हुई हैं?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:drinks_poorly",
+      "where": "Sick-child assessment, Diarrhoea (observation)",
+      "en": "Offer the child fluid: not able to drink or drinking poorly?",
+      "hi": "बच्चे को पीने को दीजिए: क्या वह पी नहीं पा रहा या बहुत कम पी रहा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:drinks_eagerly",
+      "where": "Sick-child assessment, Diarrhoea (observation)",
+      "en": "Offer the child fluid: drinking eagerly, thirsty?",
+      "hi": "बच्चे को पीने को दीजिए: क्या वह प्यास से जल्दी-जल्दी पी रहा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:skin_pinch_very_slow",
+      "where": "Sick-child assessment, Diarrhoea (observation)",
+      "en": "Pinch the skin of the abdomen: does it go back very slowly (longer than 2 seconds)?",
+      "hi": "पेट की त्वचा चुटकी से पकड़कर छोड़िए: क्या वह बहुत धीरे (2 सेकंड से ज़्यादा में) वापस जाती है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:skin_pinch_slow",
+      "where": "Sick-child assessment, Diarrhoea (observation)",
+      "en": "Pinch the skin of the abdomen: does it go back slowly?",
+      "hi": "पेट की त्वचा चुटकी से पकड़कर छोड़िए: क्या वह धीरे वापस जाती है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:fever_duration_days",
+      "where": "Sick-child assessment, Fever (question)",
+      "en": "Fever for how long?",
+      "hi": "बुखार कितने दिनों से है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:fever_daily_over_7_days",
+      "where": "Sick-child assessment, Fever (question)",
+      "en": "Has the fever been present every day?",
+      "hi": "क्या बुखार हर दिन रहा है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:stiff_neck",
+      "where": "Sick-child assessment, Fever (observation)",
+      "en": "Look or feel for stiff neck",
+      "hi": "क्या बच्चे की गर्दन अकड़ी हुई है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:other_cause_of_fever",
+      "where": "Sick-child assessment, Fever (observation)",
+      "en": "Look for any other focus of fever, such as cough or cold, pneumonia, diarrhoea, dysentery, skin infection, dengue or measles",
+      "hi": "क्या बुखार का कोई और कारण दिख रहा है, जैसे खाँसी-ज़ुकाम, निमोनिया, दस्त, पेचिश, त्वचा का संक्रमण, डेंगू या खसरा?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:rdt_result",
+      "where": "Sick-child assessment, Fever (observation)",
+      "en": "Do an RDT for malaria. Is it positive, negative, or is RDT not available?",
+      "hi": "मलेरिया की RDT जाँच कीजिए। क्या वह positive है, negative है, या RDT उपलब्ध नहीं है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:wfl_band",
+      "where": "Sick-child assessment, Malnutrition and anaemia (observation)",
+      "en": "Measure weight and length or height, plot weight-for-length on the MCP card. Is it red, yellow or green? Say 'not measured' if you could not measure.",
+      "hi": "वज़न और लंबाई नापकर MCP card पर weight-for-length देखिए। लाल, पीला या हरा? अगर नाप नहीं पाए तो बताइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:visible_severe_wasting",
+      "where": "Sick-child assessment, Malnutrition and anaemia (observation)",
+      "en": "Look for visible severe wasting",
+      "hi": "क्या बच्चा देखने में बहुत ज़्यादा दुबला, सूखा हुआ है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:oedema_both_feet",
+      "where": "Sick-child assessment, Malnutrition and anaemia (observation)",
+      "en": "Look for oedema of both feet",
+      "hi": "क्या बच्चे के दोनों पैरों में सूजन है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:muac_cm",
+      "where": "Sick-child assessment, Malnutrition and anaemia (observation)",
+      "en": "Measure MUAC (mid-upper arm circumference). How many cm?",
+      "hi": "MUAC tape से बच्चे की बाँह नापिए। कितने cm है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:palmar_pallor",
+      "where": "Sick-child assessment, Malnutrition and anaemia (observation)",
+      "en": "Look for palmar pallor. Is it severe, some, or none?",
+      "hi": "बच्चे की हथेली देखिए। क्या वह बहुत ज़्यादा पीली है, थोड़ी पीली है, या सामान्य है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:trigger:cough",
+      "where": "Sick-child assessment, opening question for Cough or difficult breathing",
+      "en": "Does the child have cough or difficult breathing?",
+      "hi": "क्या बच्चे को खाँसी है या साँस लेने में तकलीफ़ है?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:trigger:diarrhoea",
+      "where": "Sick-child assessment, opening question for Diarrhoea",
+      "en": "Does the child have diarrhoea?",
+      "hi": "क्या बच्चे को दस्त हो रहे हैं?",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "protocol:trigger:fever",
+      "where": "Sick-child assessment, opening question for Fever",
+      "en": "Does the child have fever? (by history, feels hot, or temperature 37.5 C or above)",
+      "hi": "क्या बच्चे को बुखार है? (माँ ने बताया हो, छूने पर गरम लगे, या तापमान 37.5 डिग्री या ज़्यादा हो)",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:refer_urgently:title",
+      "where": "\"What to tell the mother\": Go to the hospital now (title)",
+      "en": "Go to the hospital now",
+      "hi": "अभी अस्पताल जाइए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:refer_urgently:step:1",
+      "where": "\"What to tell the mother\": Go to the hospital now (step 1)",
+      "en": "Your child needs to go to the hospital urgently. Go now, do not wait.",
+      "hi": "बच्चे को तुरंत अस्पताल ले जाना है। अभी जाइए, देर मत कीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:keep_warm_on_the_way:title",
+      "where": "\"What to tell the mother\": Keep the child warm on the way (title)",
+      "en": "Keep the child warm on the way",
+      "hi": "रास्ते में बच्चे को गरम रखिए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:keep_warm_on_the_way:step:1",
+      "where": "\"What to tell the mother\": Keep the child warm on the way (step 1)",
+      "en": "Keep the child warm on the way to the hospital.",
+      "hi": "अस्पताल जाते समय रास्ते में बच्चे को गरम रखिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:ors_sips_on_the_way:title",
+      "where": "\"What to tell the mother\": ORS sips on the way (title)",
+      "en": "ORS sips on the way",
+      "hi": "रास्ते में ORS पिलाते रहिए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:ors_sips_on_the_way:step:1",
+      "where": "\"What to tell the mother\": ORS sips on the way (step 1)",
+      "en": "On the way to the hospital, keep giving the child small sips of ORS, often.",
+      "hi": "अस्पताल जाते समय रास्ते में बच्चे को बार-बार थोड़ा-थोड़ा ORS पिलाते रहिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:ors_sips_on_the_way:step:2",
+      "where": "\"What to tell the mother\": ORS sips on the way (step 2)",
+      "en": "Keep breastfeeding the child.",
+      "hi": "बच्चे को स्तनपान कराते रहिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:breastfeed_against_low_blood_sugar:title",
+      "where": "\"What to tell the mother\": Breastfeed now (title)",
+      "en": "Breastfeed now",
+      "hi": "अभी स्तनपान कराइए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:breastfeed_against_low_blood_sugar:step:1",
+      "where": "\"What to tell the mother\": Breastfeed now (step 1)",
+      "en": "If the child can breastfeed, breastfeed the child now. This helps prevent low blood sugar.",
+      "hi": "अगर बच्चा स्तनपान कर सकता है, तो अभी स्तनपान कराइए। इससे बच्चे की ब्लड शुगर कम होने से बचती है।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:cough_cold_home_care:title",
+      "where": "\"What to tell the mother\": Home care for cough and cold (title)",
+      "en": "Home care for cough and cold",
+      "hi": "खांसी-जुकाम में घर पर देखभाल",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:cough_cold_home_care:step:1",
+      "where": "\"What to tell the mother\": Home care for cough and cold (step 1)",
+      "en": "Keep breastfeeding, and keep feeding the child during the illness.",
+      "hi": "स्तनपान जारी रखिए, और बीमारी में भी बच्चे को खाना खिलाते रहिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:cough_cold_home_care:step:2",
+      "where": "\"What to tell the mother\": Home care for cough and cold (step 2)",
+      "en": "Give home fluids, as much as the child will take. This helps the cough.",
+      "hi": "घर के पेय, बच्चा जितना पी सके उतना पिलाइए। इससे खांसी में आराम मिलता है।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:cough_cold_home_care:step:3",
+      "where": "\"What to tell the mother\": Home care for cough and cold (step 3)",
+      "en": "If the baby is under 6 months and takes only breast milk, do not give any home remedy.",
+      "hi": "अगर बच्चा 6 महीने से छोटा है और सिर्फ़ माँ का दूध पीता है, तो कोई घरेलू नुस्खा मत दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:cough_cold_home_care:step:4",
+      "where": "\"What to tell the mother\": Home care for cough and cold (step 4)",
+      "en": "Do not give cough syrups.",
+      "hi": "खांसी का सिरप मत दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:cough_cold_home_care:step:5",
+      "where": "\"What to tell the mother\": Home care for cough and cold (step 5)",
+      "en": "Keep the nose clean with a soft cotton cloth, and use salt-water nose drops: ½ teaspoon of salt in 1 glass (250 ml) of clean drinking water. Make it fresh every day.",
+      "hi": "मुलायम सूती कपड़े से नाक साफ़ रखिए, और नमक-पानी की बूँदें डालिए: 1 गिलास (250 ml) साफ़ पीने के पानी में आधा चम्मच नमक। रोज़ नया बनाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:fever_home_care:title",
+      "where": "\"What to tell the mother\": Home care for fever (title)",
+      "en": "Home care for fever",
+      "hi": "बुखार में घर पर देखभाल",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:fever_home_care:step:1",
+      "where": "\"What to tell the mother\": Home care for fever (step 1)",
+      "en": "Keep feeding the child during the illness, and keep breastfeeding.",
+      "hi": "बीमारी में भी बच्चे को खाना खिलाते रहिए, और स्तनपान जारी रखिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:fever_home_care:step:2",
+      "where": "\"What to tell the mother\": Home care for fever (step 2)",
+      "en": "Give home fluids, as much as the child will take. A child with fever needs more fluids.",
+      "hi": "घर के पेय, बच्चा जितना पी सके उतना पिलाइए। बुखार वाले बच्चे को ज़्यादा पेय चाहिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:diarrhoea_extra_fluid:title",
+      "where": "\"What to tell the mother\": Extra fluid and food for diarrhoea (title)",
+      "en": "Extra fluid and food for diarrhoea",
+      "hi": "दस्त में ज़्यादा पेय और खाना",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:diarrhoea_extra_fluid:step:1",
+      "where": "\"What to tell the mother\": Extra fluid and food for diarrhoea (step 1)",
+      "en": "Give extra fluid, as much as the child will take, until the diarrhoea stops.",
+      "hi": "दस्त रुकने तक बच्चे को ज़्यादा पेय दीजिए, जितना वह पी सके।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:diarrhoea_extra_fluid:step:2",
+      "where": "\"What to tell the mother\": Extra fluid and food for diarrhoea (step 2)",
+      "en": "If the child takes only breast milk: breastfeed often, and for longer at each feed. If the stools are frequent and watery, give ORS as well as breast milk.",
+      "hi": "अगर बच्चा सिर्फ़ माँ का दूध पीता है: बार-बार और हर बार ज़्यादा देर तक स्तनपान कराइए। अगर बार-बार पतले दस्त हों, तो माँ के दूध के साथ ORS भी दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:diarrhoea_extra_fluid:step:3",
+      "where": "\"What to tell the mother\": Extra fluid and food for diarrhoea (step 3)",
+      "en": "If the child is 6 months or older, also give home fluids: ORS, buttermilk, milk, lemon drink, rice or dal water, vegetable soup, coconut water, or plain clean water.",
+      "hi": "अगर बच्चा 6 महीने या उससे बड़ा है, तो घर के पेय भी दीजिए: ORS, छाछ, दूध, नींबू पानी, चावल या दाल का पानी, सब्ज़ी का सूप, नारियल पानी, या साफ़ पानी।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:diarrhoea_extra_fluid:step:4",
+      "where": "\"What to tell the mother\": Extra fluid and food for diarrhoea (step 4)",
+      "en": "After each loose stool, on top of the usual drinks, give: ¼ to ½ cup (50–100 ml) if under 2 years; ½ to 1 cup (100–200 ml) if 2 years or older.",
+      "hi": "हर पतले दस्त के बाद, रोज़ के पेय के अलावा: 2 साल से छोटे बच्चे को चौथाई से आधा कप (50–100 ml), 2 साल या बड़े बच्चे को आधा से 1 कप (100–200 ml) दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:diarrhoea_extra_fluid:step:5",
+      "where": "\"What to tell the mother\": Extra fluid and food for diarrhoea (step 5)",
+      "en": "Keep feeding the child.",
+      "hi": "बच्चे को खाना खिलाते रहिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_give_ors:title",
+      "where": "\"What to tell the mother\": How to give ORS (title)",
+      "en": "How to give ORS",
+      "hi": "ORS कैसे पिलाएँ",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_give_ors:step:1",
+      "where": "\"What to tell the mother\": How to give ORS (step 1)",
+      "en": "Give ORS in small sips, often, from a cup.",
+      "hi": "ORS कप से बार-बार, छोटे-छोटे घूँट में पिलाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_give_ors:step:2",
+      "where": "\"What to tell the mother\": How to give ORS (step 2)",
+      "en": "If the child vomits, wait 10 minutes. Then give again, more slowly.",
+      "hi": "अगर बच्चा उल्टी करे, तो 10 मिनट रुकिए। फिर धीरे-धीरे दोबारा पिलाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_give_ors:step:3",
+      "where": "\"What to tell the mother\": How to give ORS (step 3)",
+      "en": "Keep breastfeeding whenever the child wants.",
+      "hi": "बच्चा जब चाहे, स्तनपान कराते रहिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_make_ors:title",
+      "where": "\"What to tell the mother\": How to make ORS (title)",
+      "en": "How to make ORS",
+      "hi": "ORS कैसे बनाएँ",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_make_ors:step:1",
+      "where": "\"What to tell the mother\": How to make ORS (step 1)",
+      "en": "Wash your hands with soap and water.",
+      "hi": "साबुन और पानी से हाथ धोइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_make_ors:step:2",
+      "where": "\"What to tell the mother\": How to make ORS (step 2)",
+      "en": "Pour all the powder from one ORS packet (1-litre packet) into a clean container.",
+      "hi": "ORS के एक पैकेट (1 लीटर वाला) का पूरा पाउडर एक साफ़ बर्तन में डालिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_make_ors:step:3",
+      "where": "\"What to tell the mother\": How to make ORS (step 3)",
+      "en": "Add 1 litre (1000 ml) of clean water. Mix well until the powder is fully dissolved.",
+      "hi": "उसमें 1 लीटर (1000 ml) साफ़ पानी डालिए। पाउडर पूरा घुलने तक अच्छे से मिलाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_make_ors:step:4",
+      "where": "\"What to tell the mother\": How to make ORS (step 4)",
+      "en": "Use it within 24 hours. Throw away what is left, and mix a new packet.",
+      "hi": "बना हुआ ORS 24 घंटे के अंदर इस्तेमाल कीजिए। बचा हुआ फेंक दीजिए, और नया पैकेट घोलिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:how_to_make_ors:app_note:1",
+      "where": "\"What to tell the mother\": How to make ORS (app note 1, not from the booklet)",
+      "en": "Use the amount of water printed on the ORS packet.",
+      "hi": "ORS पैकेट पर जितना पानी लिखा है, उतना ही पानी डालिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_up_to_6_months:title",
+      "where": "\"What to tell the mother\": Feeding (up to 6 months) (title)",
+      "en": "Feeding (up to 6 months)",
+      "hi": "खिलाना (6 महीने तक)",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_up_to_6_months:step:1",
+      "where": "\"What to tell the mother\": Feeding (up to 6 months) (step 1)",
+      "en": "Breastfeed as often as the child wants, day and night, at least 8 times in 24 hours.",
+      "hi": "बच्चा जितनी बार चाहे, दिन और रात, 24 घंटे में कम से कम 8 बार स्तनपान कराइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_up_to_6_months:step:2",
+      "where": "\"What to tell the mother\": Feeding (up to 6 months) (step 2)",
+      "en": "Do not give any other food or drink, not even water.",
+      "hi": "कोई और खाना या पेय मत दीजिए, पानी भी नहीं।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_up_to_6_months:step:3",
+      "where": "\"What to tell the mother\": Feeding (up to 6 months) (step 3)",
+      "en": "Keep breastfeeding while the child is sick.",
+      "hi": "बच्चा बीमार हो तब भी स्तनपान जारी रखिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_6_to_9_months:title",
+      "where": "\"What to tell the mother\": Feeding (6 to 9 months) (title)",
+      "en": "Feeding (6 to 9 months)",
+      "hi": "खिलाना (6 से 9 महीने)",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_6_to_9_months:step:1",
+      "where": "\"What to tell the mother\": Feeding (6 to 9 months) (step 1)",
+      "en": "Breastfeed as often as the child wants.",
+      "hi": "बच्चा जितनी बार चाहे, स्तनपान कराइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_6_to_9_months:step:2",
+      "where": "\"What to tell the mother\": Feeding (6 to 9 months) (step 2)",
+      "en": "Start with 2 to 3 tablespoons of food. Slowly increase to ½ cup (125 ml).",
+      "hi": "2 से 3 चम्मच (बड़े चम्मच) खाने से शुरू कीजिए। धीरे-धीरे आधा कप (125 ml) तक बढ़ाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_6_to_9_months:step:3",
+      "where": "\"What to tell the mother\": Feeding (6 to 9 months) (step 3)",
+      "en": "Give mashed roti or rice in undiluted milk, or thick dal or khichri with ghee or oil, with cooked vegetables; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes.",
+      "hi": "बिना पानी मिले दूध में मसली रोटी या चावल, या घी/तेल वाली गाढ़ी दाल या खिचड़ी, पकी सब्ज़ी के साथ; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_6_to_9_months:step:4",
+      "where": "\"What to tell the mother\": Feeding (6 to 9 months) (step 4)",
+      "en": "Give 2 to 3 meals a day, and 1 or 2 snacks in between.",
+      "hi": "दिन में 2 से 3 बार खाना, और बीच में 1 या 2 बार नाश्ता दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_6_to_9_months:step:5",
+      "where": "\"What to tell the mother\": Feeding (6 to 9 months) (step 5)",
+      "en": "Keep the child in your lap and feed with your own hands.",
+      "hi": "बच्चे को गोद में बिठाकर अपने हाथ से खिलाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_6_to_9_months:step:6",
+      "where": "\"What to tell the mother\": Feeding (6 to 9 months) (step 6)",
+      "en": "Wash your hands and the child's hands with soap and water before every feed.",
+      "hi": "हर बार खिलाने से पहले अपने और बच्चे के हाथ साबुन और पानी से धोइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_9_to_12_months:title",
+      "where": "\"What to tell the mother\": Feeding (9 to 12 months) (title)",
+      "en": "Feeding (9 to 12 months)",
+      "hi": "खिलाना (9 से 12 महीने)",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_9_to_12_months:step:1",
+      "where": "\"What to tell the mother\": Feeding (9 to 12 months) (step 1)",
+      "en": "Breastfeed as often as the child wants.",
+      "hi": "बच्चा जितनी बार चाहे, स्तनपान कराइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_9_to_12_months:step:2",
+      "where": "\"What to tell the mother\": Feeding (9 to 12 months) (step 2)",
+      "en": "Give at least ½ cup (125 ml) at a time of: mashed roti or rice in undiluted milk, or thick dal or khichri with ghee or oil, with cooked vegetables; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes.",
+      "hi": "एक बार में कम से कम आधा कप (125 ml) दीजिए: बिना पानी मिले दूध में मसली रोटी या चावल, या घी/तेल वाली गाढ़ी दाल या खिचड़ी, पकी सब्ज़ी के साथ; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_9_to_12_months:step:3",
+      "where": "\"What to tell the mother\": Feeding (9 to 12 months) (step 3)",
+      "en": "Give this 3 times a day if breastfed, 5 times a day if not breastfed.",
+      "hi": "स्तनपान करता हो तो दिन में 3 बार, न करता हो तो 5 बार दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_9_to_12_months:step:4",
+      "where": "\"What to tell the mother\": Feeding (9 to 12 months) (step 4)",
+      "en": "Keep the child in your lap and feed with your own hands.",
+      "hi": "बच्चे को गोद में बिठाकर अपने हाथ से खिलाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_9_to_12_months:step:5",
+      "where": "\"What to tell the mother\": Feeding (9 to 12 months) (step 5)",
+      "en": "Wash your hands and the child's hands with soap and water before every feed.",
+      "hi": "हर बार खिलाने से पहले अपने और बच्चे के हाथ साबुन और पानी से धोइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_12_to_24_months:title",
+      "where": "\"What to tell the mother\": Feeding (12 months to 2 years) (title)",
+      "en": "Feeding (12 months to 2 years)",
+      "hi": "खिलाना (12 महीने से 2 साल)",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_12_to_24_months:step:1",
+      "where": "\"What to tell the mother\": Feeding (12 months to 2 years) (step 1)",
+      "en": "Breastfeed as often as the child wants.",
+      "hi": "बच्चा जितनी बार चाहे, स्तनपान कराइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_12_to_24_months:step:2",
+      "where": "\"What to tell the mother\": Feeding (12 months to 2 years) (step 2)",
+      "en": "Give food from the family pot.",
+      "hi": "घर में बना परिवार का खाना दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_12_to_24_months:step:3",
+      "where": "\"What to tell the mother\": Feeding (12 months to 2 years) (step 3)",
+      "en": "Give at least ¾ cup (about 190 ml) at a time of: mashed roti or rice in thick dal with ghee or oil, or khichri with ghee or oil, with cooked vegetables; or roti or rice in undiluted milk; or sevian, dalia, halwa or kheer made in milk; or mashed potatoes. Offer banana, cheeku, mango or papaya.",
+      "hi": "एक बार में कम से कम पौना कप (लगभग 190 ml) दीजिए: घी/तेल वाली गाढ़ी दाल में मसली रोटी या चावल, या घी/तेल वाली खिचड़ी, पकी सब्ज़ी के साथ; या बिना पानी मिले दूध में रोटी या चावल; या दूध में बनी सेवइयाँ, दलिया, हलवा या खीर; या मसले हुए आलू। केला, चीकू, आम या पपीता भी दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_12_to_24_months:step:4",
+      "where": "\"What to tell the mother\": Feeding (12 months to 2 years) (step 4)",
+      "en": "Give food 5 times a day.",
+      "hi": "दिन में 5 बार खाना दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_12_to_24_months:step:5",
+      "where": "\"What to tell the mother\": Feeding (12 months to 2 years) (step 5)",
+      "en": "Sit with the child and help them finish the serving.",
+      "hi": "बच्चे के पास बैठकर पूरा खाना खत्म करने में मदद कीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_12_to_24_months:step:6",
+      "where": "\"What to tell the mother\": Feeding (12 months to 2 years) (step 6)",
+      "en": "Wash the child's hands with soap and water before every feed.",
+      "hi": "हर बार खिलाने से पहले बच्चे के हाथ साबुन और पानी से धोइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_2_years_and_older:title",
+      "where": "\"What to tell the mother\": Feeding (2 years and older) (title)",
+      "en": "Feeding (2 years and older)",
+      "hi": "खिलाना (2 साल और बड़े)",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_2_years_and_older:step:1",
+      "where": "\"What to tell the mother\": Feeding (2 years and older) (step 1)",
+      "en": "Give a variety of family foods, including animal-source foods, vitamin-A rich foods and vegetables.",
+      "hi": "परिवार के खाने में से तरह-तरह का खाना दीजिए, जिसमें अंडा, दूध, मांस-मछली जैसा खाना, विटामिन-A वाला खाना और सब्ज़ियाँ हों।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_2_years_and_older:step:2",
+      "where": "\"What to tell the mother\": Feeding (2 years and older) (step 2)",
+      "en": "Give at least 1 cup (250 ml) at a time, at 3 to 4 meals a day.",
+      "hi": "एक बार में कम से कम 1 कप (250 ml), दिन में 3 से 4 बार खाना दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_2_years_and_older:step:3",
+      "where": "\"What to tell the mother\": Feeding (2 years and older) (step 3)",
+      "en": "Twice a day, also give a nutritious snack between meals, such as banana, cheeku, mango or papaya.",
+      "hi": "दिन में दो बार, खाने के बीच में केला, चीकू, आम या पपीता जैसा पौष्टिक नाश्ता भी दीजिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_2_years_and_older:step:4",
+      "where": "\"What to tell the mother\": Feeding (2 years and older) (step 4)",
+      "en": "If the child refuses a new food, offer small tastes several times. Be patient.",
+      "hi": "अगर बच्चा कोई नया खाना न ले, तो कई बार थोड़ा-थोड़ा चखाइए। धीरज रखिए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_2_years_and_older:step:5",
+      "where": "\"What to tell the mother\": Feeding (2 years and older) (step 5)",
+      "en": "Make sure the child finishes the serving.",
+      "hi": "ध्यान रखिए कि बच्चा पूरा खाना खत्म करे।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:feeding_2_years_and_older:step:6",
+      "where": "\"What to tell the mother\": Feeding (2 years and older) (step 6)",
+      "en": "Teach the child to wash their hands with soap and water before every meal.",
+      "hi": "बच्चे को हर बार खाने से पहले साबुन और पानी से हाथ धोना सिखाइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_any_sick_child:title",
+      "where": "\"What to tell the mother\": Come back at once if (title)",
+      "en": "Come back at once if",
+      "hi": "तुरंत वापस आइए अगर",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_any_sick_child:step:1",
+      "where": "\"What to tell the mother\": Come back at once if (step 1)",
+      "en": "Come back at once if the child is not able to drink or breastfeed.",
+      "hi": "अगर बच्चा पी नहीं पा रहा या स्तनपान नहीं कर पा रहा, तो तुरंत वापस आइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_any_sick_child:step:2",
+      "where": "\"What to tell the mother\": Come back at once if (step 2)",
+      "en": "Come back at once if the child becomes sicker.",
+      "hi": "अगर बच्चा और ज़्यादा बीमार हो जाए, तो तुरंत वापस आइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_any_sick_child:step:3",
+      "where": "\"What to tell the mother\": Come back at once if (step 3)",
+      "en": "Come back at once if the child gets a fever (if there is no fever already).",
+      "hi": "अगर बच्चे को बुखार आ जाए (अगर पहले से बुखार नहीं है), तो तुरंत वापस आइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_cough_cold:title",
+      "where": "\"What to tell the mother\": Cough or cold: also come back if (title)",
+      "en": "Cough or cold: also come back if",
+      "hi": "खांसी-जुकाम: इसमें भी वापस आइए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_cough_cold:step:1",
+      "where": "\"What to tell the mother\": Cough or cold: also come back if (step 1)",
+      "en": "Also come back at once if the child breathes fast or has difficulty breathing.",
+      "hi": "अगर बच्चा तेज़ साँस ले या साँस लेने में तकलीफ़ हो, तो भी तुरंत वापस आइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_diarrhoea:title",
+      "where": "\"What to tell the mother\": Diarrhoea: also come back if (title)",
+      "en": "Diarrhoea: also come back if",
+      "hi": "दस्त: इसमें भी वापस आइए",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:return_at_once_diarrhoea:step:1",
+      "where": "\"What to tell the mother\": Diarrhoea: also come back if (step 1)",
+      "en": "Also come back at once if there is blood in the stool or the child drinks poorly.",
+      "hi": "अगर पाखाने में खून आए या बच्चा ठीक से न पिए, तो भी तुरंत वापस आइए।",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:follow_up_earliest_day:title",
+      "where": "\"What to tell the mother\": Follow-up visit (title)",
+      "en": "Follow-up visit",
+      "hi": "फ़ॉलो-अप के लिए आना",
+      "placeholders": [],
+      "mwr": ""
+    },
+    {
+      "id": "counselling:follow_up_earliest_day:step:1",
+      "where": "\"What to tell the mother\": Follow-up visit (step 1)",
+      "en": "Come back for the follow-up visit on the day you are given. If you are given more than one day, come on the earliest one.",
+      "hi": "फ़ॉलो-अप के लिए बताए गए दिन वापस आइए। अगर एक से ज़्यादा दिन बताए गए हों, तो सबसे पहले वाले दिन आइए।",
+      "placeholders": [],
+      "mwr": ""
+    }
+  ]
+}

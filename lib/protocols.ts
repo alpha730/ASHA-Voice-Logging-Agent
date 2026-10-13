@@ -1,4 +1,3 @@
-import type { UiLang } from "@/lib/agent";
 import type { VisitProtocol } from "@/types/patient";
 
 /**
@@ -10,7 +9,7 @@ export interface ProtocolField {
   type: "string" | "number" | "boolean" | "string[]" | "date";
   describe: string; // goes into the extraction prompt
   required?: boolean;
-  question: Record<UiLang, string>;
+  question: string; // ui-text.json id, read with t()
 }
 
 export interface ProtocolSpec {
@@ -22,7 +21,6 @@ export interface ProtocolSpec {
   fields: ProtocolField[];
 }
 
-const q = (en: string, hi: string): Record<UiLang, string> => ({ en, hi });
 
 export const PROTOCOLS: Record<VisitProtocol, ProtocolSpec> = {
   maternal_anc: {
@@ -35,40 +33,40 @@ export const PROTOCOLS: Record<VisitProtocol, ProtocolSpec> = {
         type: "number",
         describe: "month of pregnancy, 1-9",
         required: true,
-        question: q("Which month of pregnancy is she in?", "गर्भ का कौन-सा महीना चल रहा है?"),
+        question: "protocol.maternal_anc.gestational_month",
       },
       {
         key: "bp",
         type: "string",
         describe: "blood pressure as systolic/diastolic, e.g. 120/80",
         required: true,
-        question: q("What was her blood pressure?", "उनका BP कितना था?"),
+        question: "protocol.maternal_anc.bp",
       },
       {
         key: "weight_kg",
         type: "number",
         describe: "weight in kilograms",
-        question: q("What is her weight?", "उनका वज़न कितना है?"),
+        question: "protocol.maternal_anc.weight_kg",
       },
       {
         key: "ifa_tablets_taken",
         type: "boolean",
         describe: "true if she is taking iron folic acid tablets, false if not, null if not discussed",
         required: true,
-        question: q("Is she taking her IFA tablets?", "क्या वे IFA की गोली ले रही हैं?"),
+        question: "protocol.maternal_anc.ifa_tablets_taken",
       },
       {
         key: "danger_signs",
         type: "string[]",
         describe: "danger signs such as bleeding, severe headache, blurred vision, swelling, reduced fetal movement",
         required: true,
-        question: q("Any danger signs, such as bleeding or swelling?", "कोई ख़तरे का लक्षण, जैसे खून आना या सूजन?"),
+        question: "protocol.maternal_anc.danger_signs",
       },
       {
         key: "expected_delivery_date",
         type: "date",
         describe: "expected date of delivery as YYYY-MM-DD",
-        question: q("What is the expected delivery date?", "डिलीवरी की संभावित तारीख़ क्या है?"),
+        question: "protocol.maternal_anc.expected_delivery_date",
       },
     ],
   },
@@ -83,27 +81,27 @@ export const PROTOCOLS: Record<VisitProtocol, ProtocolSpec> = {
         type: "date",
         describe: "the child's date of birth as YYYY-MM-DD, or derived from a stated age",
         required: true,
-        question: q("What is the child's date of birth or age?", "बच्चे की जन्म तारीख़ या उम्र क्या है?"),
+        question: "protocol.child_immunization.date_of_birth",
       },
       {
         key: "vaccines_given",
         type: "string[]",
         describe: "vaccines administered at this visit, e.g. [\"Pentavalent-1\", \"OPV-1\"]",
         required: true,
-        question: q("Which vaccines were given today?", "आज कौन-सा टीका लगा?"),
+        question: "protocol.child_immunization.vaccines_given",
       },
       {
         key: "weight_kg",
         type: "number",
         describe: "weight in kilograms",
         required: true,
-        question: q("What is the child's weight?", "बच्चे का वज़न कितना है?"),
+        question: "protocol.child_immunization.weight_kg",
       },
       {
         key: "growth_concern",
         type: "string",
         describe: "any growth or nutrition concern noted",
-        question: q("Any growth or nutrition concern?", "बढ़त या पोषण की कोई चिंता?"),
+        question: "protocol.child_immunization.growth_concern",
       },
     ],
   },

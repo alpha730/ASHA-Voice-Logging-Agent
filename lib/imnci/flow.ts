@@ -17,8 +17,11 @@ import {
   type SignValue,
   type Signs,
 } from "./rules.ts";
+import { hasReview, reviewedMwr, type Lang, type MwrText } from "../i18n.ts";
+import { t, UI_TEXT } from "../text.ts";
+import marwariAnswers from "../../marwari-answers.json" with { type: "json" };
 
-export type Lang = "hi" | "en";
+export type { Lang };
 export type StepKind = "yesno" | "days" | "count" | "choice";
 
 export interface Step {
@@ -28,7 +31,7 @@ export interface Step {
   measurement: boolean; // she must count or test; never filled from narrative or by the model
   look: boolean; // an observation item: she checks the child rather than asks the mother
   assessment: string; // "general_danger_signs", "cough", ...
-  prompt: { en: string; hi: string | null }; // hi is null when the protocol has no Hindi text
+  prompt: StepPrompt;
   positiveWhen: "yes" | "no"; // for yesno: which answer makes the sign true
   choices?: Record<string, Record<string, SignValue>>; // for choice: answer -> sign values
   range?: [number, number]; // for count: plausible values; anything outside is asked again
@@ -36,15 +39,26 @@ export interface Step {
   appAuthored?: boolean; // prompt text written by the app, not taken from the protocol JSON
 }
 
-/** Two-way look items that are really one observation with three answers. */
-const GROUPS: { key: string; signs: string[]; prompt: { en: string; hi: string }; choices: Record<string, Record<string, SignValue>> }[] = [
+/** A question in each language. hi is null when the protocol has no Hindi text; mwr only once reviewed. */
+export interface StepPrompt {
+  en: string;
+  hi: string | null;
+  mwr?: MwrText | null;
+}
+
+/** Reviewed Marwari from a protocol item's optional `mwr` field, or null. */
+function mwrOf(m: { question?: string; observation?: string; reviewed_by?: string; reviewed_on?: string } | null | undefined): MwrText | null {
+  const text = m?.question ?? m?.observation;
+  const out = m && text ? { text, reviewed_by: m.reviewed_by ?? "", reviewed_on: m.reviewed_on ?? "" } : null;
+  return out && hasReview(out) && reviewedMwr(out) ? out : null;
+}
+
+/** Two-way look items that are really one observation with three answers. Wording is in ui-text.json. */
+const GROUPS: { key: string; signs: string[]; prompt: StepPrompt; choices: Record<string, Record<string, SignValue>> }[] = [
   {
     key: "skin_pinch",
     signs: ["skin_pinch_very_slow", "skin_pinch_slow"],
-    prompt: {
-      en: "Pinch the skin of the abdomen and let go. Does it go back very slowly (longer than 2 seconds), slowly, or immediately?",
-      hi: "पेट की त्वचा चुटकी से पकड़कर छोड़िए। क्या वह बहुत धीरे (2 सेकंड से ज़्यादा में), धीरे, या तुरंत वापस जाती है?",
-    },
+    prompt: UI_TEXT.texts["triage.group.skin_pinch"],
     choices: {
       very_slow: { skin_pinch_very_slow: true, skin_pinch_slow: false },
       slow: { skin_pinch_very_slow: false, skin_pinch_slow: true },
@@ -54,10 +68,7 @@ const GROUPS: { key: string; signs: string[]; prompt: { en: string; hi: string }
   {
     key: "offer_fluid",
     signs: ["drinks_poorly", "drinks_eagerly"],
-    prompt: {
-      en: "Offer the child fluid. Is the child not able to drink or drinking poorly, drinking eagerly and thirsty, or drinking normally?",
-      hi: "बच्चे को पीने को दीजिए। क्या वह पी नहीं पा रहा या बहुत कम पी रहा है, प्यास से जल्दी-जल्दी पी रहा है, या सामान्य पी रहा है?",
-    },
+    prompt: UI_TEXT.texts["triage.group.offer_fluid"],
     choices: {
       poorly: { drinks_poorly: true, drinks_eagerly: false },
       eagerly: { drinks_poorly: false, drinks_eagerly: true },
@@ -74,7 +85,7 @@ function itemStep(item: ProtocolItem, assessment: string, look: boolean): Step {
     signs: [item.id],
     assessment,
     look,
-    prompt: { en: text, hi },
+    prompt: { en: text, hi, mwr: mwrOf(item.mwr) },
     positiveWhen: item.positive_when ?? "yes",
     askIf: item.ask_if,
   };
@@ -112,7 +123,7 @@ export function buildSteps(protocol: ImnciProtocol): Step[] {
         measurement: false,
         look: false,
         assessment: a.id,
-        prompt: { en: a.trigger.question_en, hi: a.trigger.question_hi ?? null },
+        prompt: { en: a.trigger.question_en, hi: a.trigger.question_hi ?? null, mwr: mwrOf(a.trigger.mwr) },
         positiveWhen: "yes",
       });
     }
@@ -164,11 +175,18 @@ export function nextStep(
   return null;
 }
 
+/** The question in this language: reviewed Marwari, else Hindi, else English. */
+export function promptOf(prompt: StepPrompt, lang: Lang): string {
+  if (lang === "en") return prompt.en;
+  if (lang === "mwr" && reviewedMwr(prompt.mwr)) return prompt.mwr.text;
+  return prompt.hi ?? prompt.en;
+}
+
 export function promptText(step: Step, lang: Lang): string {
-  const text = lang === "hi" && step.prompt.hi ? step.prompt.hi : step.prompt.en;
+  const text = promptOf(step.prompt, lang);
   // A question that already asks for the reading ("How many cm?") needs no extra instruction.
-  if (step.kind === "count" && !/\?\s*$/.test(text)) return lang === "hi" ? `${text}। फिर नंबर बताइए।` : `${text}, then tell me the number.`;
-  if (step.look && step.kind === "yesno") return lang === "hi" ? `कृपया देखिए: ${text}` : `Please check: ${text}`;
+  if (step.kind === "count" && !/\?\s*$/.test(text)) return t("triage.prompt.count", lang, { text });
+  if (step.look && step.kind === "yesno") return t("triage.prompt.look", lang, { text });
   return text;
 }
 
@@ -179,12 +197,27 @@ export function promptText(step: Step, lang: Lang): string {
 const YES_RE = /\b(yes|yeah|haan|han|ha|hai|ji haan|bilkul|sahi)\b|हाँ|हां|जी हाँ/i;
 const NO_RE = /\b(no|nahi|nahin|nahi hai|na|not)\b|नहीं|नही/i;
 
-/** A clear yes or no. Null when both or neither appear, so the model or a re-ask decides. */
-export function parseYesNo(text: string): boolean | null {
+/** Hindi and English only: a clear yes or no, or null when both or neither appear. */
+function hiEnYesNo(text: string): boolean | null {
   const t = text.toLowerCase();
   const no = NO_RE.test(t);
   // "hai" alone is too weak to count as yes when a negation is also present.
   const yes = YES_RE.test(t.replace(/\b(nahi|nahin)\s+hai\b/g, ""));
+  if (yes && !no) return true;
+  if (no && !yes) return false;
+  return null;
+}
+
+/**
+ * A clear yes or no. Null when both or neither appear, so the model or a re-ask decides.
+ * Marwari words count only when the Hindi/English words do not decide, so they can never
+ * change a Hindi or English answer.
+ */
+export function parseYesNo(text: string): boolean | null {
+  const base = hiEnYesNo(text);
+  if (base !== null) return base;
+  const yes = MARWARI.yes?.test(text) ?? false;
+  const no = MARWARI.no?.test(text) ?? false;
   if (yes && !no) return true;
   if (no && !yes) return false;
   return null;
@@ -237,28 +270,9 @@ const CHOICE_WORDS: Record<string, RegExp> = {
   not_available: /(not available|not done|nahi hai|nahi hua|nahi kiya|उपलब्ध नहीं|नहीं है|नहीं किया|नहीं हुआ)/i,
 };
 
-/** How each choice is read back to the worker when an answer needs repeating. */
-const CHOICE_LABELS: Record<string, Record<Lang, string>> = {
-  very_slow: { en: "very slowly", hi: "बहुत धीरे" },
-  slow: { en: "slowly", hi: "धीरे" },
-  immediately: { en: "immediately", hi: "तुरंत" },
-  poorly: { en: "not able or poorly", hi: "नहीं पी पा रहा या कम" },
-  eagerly: { en: "eagerly, thirsty", hi: "प्यास से जल्दी-जल्दी" },
-  normally: { en: "normally", hi: "सामान्य" },
-  severe: { en: "severe", hi: "बहुत ज़्यादा" },
-  some: { en: "some", hi: "थोड़ी" },
-  none: { en: "none", hi: "सामान्य" },
-  below_minus_3sd: { en: "red", hi: "लाल" },
-  minus_3_to_minus_2sd: { en: "yellow", hi: "पीला" },
-  at_or_above_minus_2sd: { en: "green", hi: "हरा" },
-  not_measured: { en: "not measured", hi: "नाप नहीं पाए" },
-  positive: { en: "positive", hi: "positive" },
-  negative: { en: "negative", hi: "negative" },
-  not_available: { en: "not available", hi: "उपलब्ध नहीं" },
-};
-
+/** How each choice is read back to the worker when an answer needs repeating (ui-text.json "triage.choice.*"). */
 export function choiceLabels(step: Step, lang: Lang): string[] {
-  return Object.keys(step.choices ?? {}).map((c) => CHOICE_LABELS[c]?.[lang] ?? c.replace(/_/g, " "));
+  return Object.keys(step.choices ?? {}).map((c) => (UI_TEXT.texts[`triage.choice.${c}`] ? t(`triage.choice.${c}`, lang) : c.replace(/_/g, " ")));
 }
 
 /** Map an answer onto exactly one of a step's choices. Ambiguity returns null and the question is asked again. */
@@ -295,10 +309,85 @@ const UNKNOWN_RE = new RegExp(
   "i",
 );
 
+const hiEnUnknown = (text: string) => UNKNOWN_RE.test(text.replace(/[‘’`]/g, "'"));
+
 /** True when she says she does not know, did not check, or wants to skip. The sign stays not assessed. */
 export function isUnknownAnswer(text: string): boolean {
-  return UNKNOWN_RE.test(text.replace(/[‘’`]/g, "'"));
+  return hiEnUnknown(text) || (MARWARI.unknown?.test(text) ?? false);
 }
+
+// ---------------------------------------------------------------------------
+// Marwari answer words (marwari-answers.json), filled by a native speaker
+// ---------------------------------------------------------------------------
+
+export interface AnswerWords {
+  yes: string[];
+  no: string[];
+  unknown: string[];
+}
+
+/**
+ * Hindi and English answers whose reading must never change when Marwari words are added. Start-up
+ * refuses a word list that changes any of them (for example "kabhi" as yes, or "kuch nahi" as unknown).
+ */
+export const REFERENCE_ANSWERS = [
+  "haan", "han", "ha", "yes", "yeah", "ji haan", "bilkul", "sahi hai", "hai", "हाँ", "हां", "जी हाँ",
+  "nahi", "nahin", "nahi hai", "na", "no", "not", "नहीं", "नहीं है", "नही",
+  "pata nahi", "nahi pata", "maloom nahi", "dekha nahi", "check nahi kiya", "i don't know", "not sure", "skip", "पता नहीं", "मालूम नहीं",
+  "doodh nahi pee raha", "दूध नहीं पी रहा", "pee raha hai", "kuch nahi", "kuch bhi nahi", "koi nahi", "theek hai", "sab theek",
+  "kabhi kabhi", "thoda", "thodi", "bahut", "ek baar", "do baar", "subah", "raat ko", "abhi", "pehle", "kal", "aaj",
+  "ulti ho rahi hai", "ulti nahi ho rahi", "khansi hai", "khansi nahi hai", "bukhar hai", "dast hai", "saans tez hai",
+  "dekh nahi raha", "so raha hai", "jag raha hai", "ro raha hai", "maa keh rahi hai", "bachcha theek hai", "galat hai",
+];
+
+type Compiled = { yes: RegExp | null; no: RegExp | null; unknown: RegExp | null };
+let MARWARI: Compiled = { yes: null, no: null, unknown: null };
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Whole words or phrases only: "kon" never matches inside "kona". Spaces match any whitespace. */
+function wholePhrases(list: string[]): RegExp | null {
+  if (!list.length) return null;
+  const alts = list.map((w) => escapeRe(w).replace(/\s+/g, "\\s+")).join("|");
+  return new RegExp(`(?<![\\p{L}\\p{M}\\p{N}])(?:${alts})(?![\\p{L}\\p{M}\\p{N}])`, "iu");
+}
+
+const reading = (text: string) => (isUnknownAnswer(text) ? "unknown" : String(parseYesNo(text)));
+
+/**
+ * Check and load a Marwari word list. Throws if a word is empty, appears in two lists, is a yes or no
+ * word that already means something else in Hindi or English, or changes how any REFERENCE_ANSWERS
+ * answer is read.
+ */
+export function setMarwariAnswers(words: AnswerWords): void {
+  const clean = (l: unknown) => (Array.isArray(l) ? l : []).map((w) => String(w).trim().toLowerCase().replace(/\s+/g, " "));
+  const lists = { yes: clean(words.yes), no: clean(words.no), unknown: clean(words.unknown) };
+  const errors: string[] = [];
+  const seen = new Map<string, string>();
+  for (const [kind, list] of Object.entries(lists)) {
+    for (const w of list) {
+      if (!w) errors.push(`${kind}: an empty word`);
+      else if (seen.has(w) && seen.get(w) !== kind) errors.push(`"${w}" is in both ${seen.get(w)} and ${kind}`);
+      seen.set(w, kind);
+      const hiEn = hiEnUnknown(w) ? "unknown" : hiEnYesNo(w) === true ? "yes" : hiEnYesNo(w) === false ? "no" : null;
+      // An unknown phrase may contain "nahi" ("... nahi" = "don't know"): unknown is checked first, so that is
+      // its purpose. A yes or no word that already means something else in Hindi or English is refused.
+      if (kind !== "unknown" && hiEn && hiEn !== kind) errors.push(`"${w}" (${kind}) already means "${hiEn}" in Hindi or English`);
+    }
+  }
+  const before = new Map(REFERENCE_ANSWERS.map((a) => [a, reading(a)]));
+  const previous = MARWARI;
+  MARWARI = { yes: wholePhrases(lists.yes), no: wholePhrases(lists.no), unknown: wholePhrases(lists.unknown) };
+  for (const a of REFERENCE_ANSWERS) {
+    const after = reading(a);
+    if (after !== before.get(a)) errors.push(`would change the reading of "${a}" from ${before.get(a)} to ${after}`);
+  }
+  if (errors.length) {
+    MARWARI = previous;
+    throw new Error(`Invalid marwari-answers.json:\n${errors.join("\n")}`);
+  }
+}
+
+setMarwariAnswers(marwariAnswers as AnswerWords);
 
 /**
  * Parse the answer to one step. Returns the sign values, or null if the answer did not settle the
@@ -455,12 +544,8 @@ export function triageEntry(opts: { transcript: string; symptoms: string[]; temp
 }
 
 export function outOfRangeMessage(months: number, lang: Lang): string {
-  if (lang === "hi") {
-    const young = months < AGE_MIN_MONTHS ? " 2 महीने से छोटे शिशु के लिए young infant chart देखिए, यह app उसे नहीं करता।" : "";
-    return `बच्चा ${months} महीने का है। यह IMNCI जाँच सिर्फ़ 2 महीने से 5 साल तक के बच्चों के लिए है, इसलिए शुरू नहीं की गई।${young}`;
-  }
-  const young = months < AGE_MIN_MONTHS ? " For a young infant under 2 months, use the young infant chart; this app does not cover it." : "";
-  return `The child is ${months} months old. This IMNCI assessment is only for children from 2 months up to 5 years, so it was not started.${young}`;
+  const young = months < AGE_MIN_MONTHS ? t("triage.out_of_range.young_infant", lang) : "";
+  return t("triage.out_of_range", lang, { months }) + young;
 }
 
 /**
@@ -468,17 +553,9 @@ export function outOfRangeMessage(months: number, lang: Lang): string {
  * question is asked again in a form the parser reads directly; the answer is never guessed.
  */
 export function modelBusyRepeat(step: Step, lang: Lang): string {
-  const prompt = promptText(step, lang);
-  if (lang === "hi") {
-    const how = step.kind === "days" ? `दिनों की संख्या बताइए, जैसे "3 दिन"` : `"हाँ" या "नहीं" में जवाब दीजिए`;
-    return `भाषा मॉडल अभी व्यस्त है, इसलिए जवाब समझ नहीं आया। कृपया दोबारा, ${how}। ${prompt}`;
-  }
-  const how = step.kind === "days" ? `say the number of days, for example "3 days"` : `answer "yes" or "no"`;
-  return `The language model is busy, so I could not read that answer. Please say it again and ${how}. ${prompt}`;
+  const question = promptText(step, lang);
+  return t(step.kind === "days" ? "triage.model_busy_repeat.days" : "triage.model_busy_repeat.yesno", lang, { question });
 }
 
 /** Opening line when the visit sentence could not be read for signs because the model was down. */
-export const MODEL_BUSY_START: Record<Lang, string> = {
-  en: "The language model is busy, so I will ask each question in turn. ",
-  hi: "भाषा मॉडल अभी व्यस्त है, इसलिए मैं हर सवाल एक-एक करके पूछूँगी। ",
-};
+export const modelBusyStart = (lang: Lang): string => t("triage.model_busy_start", lang);

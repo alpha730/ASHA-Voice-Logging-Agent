@@ -1,0 +1,6 @@
+{
+  "_about": "Marwari answer words for the sick-child assessment, matched as whole words or phrases. 'unknown' is checked before yes/no, so an unknown answer is never read as no. yes/no words are used only when the Hindi/English parser cannot decide. Lists start empty: a native speaker fills them. The app refuses to start if a word would change how a reference Hindi or English answer is read (see lib/imnci/flow.ts, REFERENCE_ANSWERS).",
+  "yes": [],
+  "no": [],
+  "unknown": []
+}
